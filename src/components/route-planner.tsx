@@ -1,7 +1,6 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { campus, DATA_VERIFIED } from "@/data/campus";
 import { formatDistance, formatDuration, planRoute } from "@/lib/advisory";
@@ -89,7 +88,7 @@ export function RoutePlanner() {
             <h1 className="text-xl font-bold leading-tight">AACNRAS</h1>
             <p className="text-sm text-muted">Accessible campus navigation · Obafemi Awolowo University</p>
           </div>
-          <nav className="flex items-center gap-2">
+          <div className="flex items-center gap-2">
             <button
               type="button"
               onClick={() => setShowSettings((s) => !s)}
@@ -99,10 +98,7 @@ export function RoutePlanner() {
             >
               Display &amp; voice
             </button>
-            <Link href="/admin" className="rounded-md px-3 py-2 text-sm underline">
-              Admin
-            </Link>
-          </nav>
+          </div>
         </div>
         {showSettings && (
           <section id="settings" aria-label="Display and voice settings" className="border-t border-border px-4 py-3">
