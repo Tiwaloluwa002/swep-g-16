@@ -1,6 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { campus, DATA_VERIFIED } from "@/data/campus";
 import { formatDistance, formatDuration, planRoute } from "@/lib/advisory";
@@ -96,6 +97,9 @@ export function RoutePlanner() {
             >
               Display &amp; voice
             </button>
+            <Link href="/about" className="rounded-md px-3 py-2 text-sm underline">
+              About
+            </Link>
           </div>
         </div>
         {showSettings && (
