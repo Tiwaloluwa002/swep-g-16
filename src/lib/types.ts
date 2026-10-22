@@ -71,6 +71,8 @@ export type MobilityProfile = {
   maxSlopePercent: number;
   /** Extra cost per step, in seconds, when steps are allowed. */
   stepPenalty: number;
+  /** Time taken per step, for travel-time estimates. */
+  secondsPerStep: number;
   /** Multiplier applied per percent of slope (cost grows with gradient). */
   slopeFactor: number;
   surfacePenalty: Record<Surface, number>;
