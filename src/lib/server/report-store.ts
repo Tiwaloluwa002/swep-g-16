@@ -1,7 +1,7 @@
 import { createHash, randomUUID, timingSafeEqual } from "node:crypto";
 import { promises as fs } from "node:fs";
 import path from "node:path";
-import { edgeById, placeById } from "@/lib/graph";
+import { campus } from "@/data/campus";
 import { REPORT_STATUSES, REPORT_TYPES } from "@/lib/reports";
 import type { Report, ReportStatus, ReportType } from "@/lib/types";
 
@@ -48,8 +48,8 @@ export function parseNewReport(input: unknown): NewReport | string {
   if (description.length > 500) return "Description must be 500 characters or fewer.";
   const edgeId = typeof body.edgeId === "string" && body.edgeId ? body.edgeId : undefined;
   const placeId = typeof body.placeId === "string" && body.placeId ? body.placeId : undefined;
-  if (edgeId && !edgeById.has(edgeId)) return "Unknown path.";
-  if (placeId && !placeById.has(placeId)) return "Unknown building.";
+  if (edgeId && !campus.edges.has(edgeId)) return "Unknown path.";
+  if (placeId && !campus.places.has(placeId)) return "Unknown building.";
   if (!edgeId && !placeId) return "Choose the path or building the report is about.";
   const { lat, lng } = body;
   if (typeof lat !== "number" || typeof lng !== "number" || Math.abs(lat) > 90 || Math.abs(lng) > 180) {

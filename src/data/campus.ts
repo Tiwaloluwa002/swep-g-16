@@ -1,304 +1,86 @@
-import type { CampusEdge, CampusNode, Place } from "@/lib/types";
+import { createGraph } from "@/lib/graph";
+import type { CampusEdge, CampusNode, PlaceAccessibility, PlaceInput, RestPointInput } from "@/lib/types";
+import osm from "./osm-network.json";
 
 /*
  * OAU Ile-Ife campus walking network.
  *
- * Coordinates are approximate and the path attributes (slope, steps,
- * lighting, surface) are first estimates. Verify every entry on site
- * during the survey and set DATA_VERIFIED once that is done.
+ * Paths come from OpenStreetMap (`npm run import:osm` refreshes them) and
+ * slopes are estimated from a 90 m terrain model. Building positions are
+ * from OpenStreetMap too. Building accessibility features start as null
+ * ("not surveyed"); fill them in from the on-site survey, and record path
+ * corrections in `pathCorrections`. Set DATA_VERIFIED once that is done.
  */
 export const DATA_VERIFIED = false;
+export const CAMPUS_CENTER = { lat: 7.5185, lng: 4.5225 };
 
-export const CAMPUS_CENTER = { lat: 7.5178, lng: 4.5236 };
+type Correction = Partial<Pick<CampusEdge, "name" | "surface" | "slopePercent" | "steps" | "lit" | "tactilePaving" | "kerbRamps">>;
 
-export const nodes: CampusNode[] = [
-  // Building entrances
-  { id: "n-bus", lat: 7.5192, lng: 4.5195, restPoint: "Shuttle park shelter" },
-  { id: "n-sub", lat: 7.5207, lng: 4.5213 },
-  { id: "n-amph", lat: 7.5179, lng: 4.5212 },
-  { id: "n-senate", lat: 7.5186, lng: 4.5222 },
-  { id: "n-lib", lat: 7.5197, lng: 4.5236 },
-  { id: "n-arts", lat: 7.5191, lng: 4.525 },
-  { id: "n-sci", lat: 7.5212, lng: 4.5245 },
-  { id: "n-tech", lat: 7.5222, lng: 4.5262 },
-  { id: "n-socsci", lat: 7.5175, lng: 4.525 },
-  { id: "n-oduduwa", lat: 7.5168, lng: 4.5233 },
-  { id: "n-health", lat: 7.5158, lng: 4.5268 },
-  { id: "n-moremi", lat: 7.5128, lng: 4.5258 },
-  { id: "n-awo", lat: 7.5136, lng: 4.5222 },
-  { id: "n-fajuyi", lat: 7.5147, lng: 4.5205 },
-  // Junctions
-  { id: "j-ring-w", lat: 7.5195, lng: 4.5208 },
-  { id: "j-senate-sq", lat: 7.519, lng: 4.5228, restPoint: "Senate square benches" },
-  { id: "j-lib-front", lat: 7.5202, lng: 4.524 },
-  { id: "j-east", lat: 7.52, lng: 4.5258 },
-  { id: "j-south", lat: 7.5172, lng: 4.5222 },
-  { id: "j-south-e", lat: 7.5165, lng: 4.5252, restPoint: "Shaded bench by the lawn" },
-  { id: "j-hall-road", lat: 7.515, lng: 4.523 },
-  { id: "j-moremi-gate", lat: 7.5138, lng: 4.525 },
-];
+/**
+ * Survey corrections, keyed by OpenStreetMap way id (`w<id>`, applies to the
+ * whole way) or edge id (`w<id>-<n>`, applies to one segment).
+ * Example: w123456789: { slopePercent: 9, kerbRamps: false }
+ */
+const pathCorrections: Record<string, Correction> = {};
 
-const path = (
+const nodes: CampusNode[] = osm.nodes.map(([id, lat, lng]) => ({ id: String(id), lat: Number(lat), lng: Number(lng) }));
+
+// JSON imports widen literal types, so restate the shape the import script writes.
+type OsmEdge = CampusEdge & { wayId: number };
+const edges: CampusEdge[] = (osm.edges as unknown as OsmEdge[]).map(({ wayId, ...edge }) => ({
+  ...edge,
+  ...pathCorrections[`w${wayId}`],
+  ...pathCorrections[edge.id],
+}));
+
+const notSurveyed: PlaceAccessibility = {
+  stepFreeEntrance: null,
+  ramp: null,
+  lift: null,
+  accessibleToilet: null,
+};
+
+const place = (
   id: string,
-  from: string,
-  to: string,
   name: string,
-  attrs: Partial<Omit<CampusEdge, "id" | "from" | "to" | "name">> = {},
-): CampusEdge => ({
-  id,
-  from,
-  to,
-  name,
-  surface: "paved",
-  slopePercent: 2,
-  steps: 0,
-  lit: true,
-  shaded: false,
-  tactilePaving: false,
-  kerbRamps: true,
-  ...attrs,
-});
+  category: PlaceInput["category"],
+  lat: number,
+  lng: number,
+  description: string,
+  accessibility: Partial<PlaceAccessibility> = {},
+): PlaceInput => ({ id, name, category, lat, lng, description, accessibility: { ...notSurveyed, ...accessibility } });
 
-export const edges: CampusEdge[] = [
-  path("e1", "n-bus", "j-ring-w", "Shuttle park walkway", { slopePercent: 1 }),
-  path("e2", "j-ring-w", "n-sub", "SUB road"),
-  path("e3", "j-ring-w", "n-amph", "Amphitheatre walkway", { slopePercent: 3 }),
-  path("e4", "n-amph", "j-south", "Amphitheatre south path"),
-  path("e5", "n-amph", "n-senate", "Amphitheatre steps", { steps: 12, slopePercent: 0 }),
-  path("e6", "j-ring-w", "j-senate-sq", "Senate road", { slopePercent: 4 }),
-  path("e7", "n-senate", "j-senate-sq", "Senate forecourt", {
-    slopePercent: 1,
-    tactilePaving: true,
-  }),
-  path("e8", "j-senate-sq", "j-lib-front", "Library walkway", {
-    slopePercent: 5,
-    shaded: true,
-  }),
-  path("e9", "j-lib-front", "n-lib", "Library ramp", { slopePercent: 6, tactilePaving: true }),
-  path("e10", "n-senate", "n-lib", "Senate–Library stairs", { steps: 20, slopePercent: 0 }),
-  path("e11", "j-lib-front", "n-sci", "Science road", { slopePercent: 3 }),
-  path("e12", "n-sub", "n-sci", "SUB–Science footpath", {
-    surface: "unpaved",
-    slopePercent: 4,
-    lit: false,
-    kerbRamps: false,
-  }),
-  path("e13", "n-sci", "n-tech", "Science–Technology road", { slopePercent: 7 }),
-  path("e14", "j-lib-front", "j-east", "East walkway"),
-  path("e15", "j-east", "n-tech", "Technology approach", { slopePercent: 4 }),
-  path("e16", "j-east", "n-arts", "Arts walkway", { shaded: true }),
-  path("e17", "n-arts", "j-senate-sq", "Arts shortcut steps", { steps: 8, slopePercent: 0 }),
-  path("e18", "n-arts", "n-socsci", "Arts–Social Sciences path", { slopePercent: 3 }),
-  path("e19", "j-senate-sq", "j-south", "Senate south road", { slopePercent: 3 }),
-  path("e20", "j-south", "n-oduduwa", "Oduduwa approach"),
-  path("e21", "n-oduduwa", "j-south-e", "Oduduwa east path", { slopePercent: 4, lit: false }),
-  path("e22", "n-socsci", "j-south-e", "Social Sciences path", { shaded: true }),
-  path("e23", "j-south-e", "n-health", "Health Centre road", { slopePercent: 3 }),
-  path("e24", "j-south", "j-hall-road", "Hall road", { slopePercent: 6 }),
-  path("e25", "j-hall-road", "n-awo", "Awolowo Hall road"),
-  path("e26", "j-hall-road", "n-fajuyi", "Fajuyi Hall road", { slopePercent: 3 }),
-  path("e27", "n-fajuyi", "j-ring-w", "Fajuyi back path", {
-    surface: "rough",
-    slopePercent: 9,
-    lit: false,
-    kerbRamps: false,
-  }),
-  path("e28", "j-hall-road", "j-moremi-gate", "Moremi road", { slopePercent: 4 }),
-  path("e29", "j-moremi-gate", "n-moremi", "Moremi Hall gate"),
-  path("e30", "n-health", "j-moremi-gate", "Health Centre hill", { slopePercent: 10 }),
-  path("e31", "n-oduduwa", "j-hall-road", "Oduduwa steps", { steps: 15, slopePercent: 0 }),
+export const places: PlaceInput[] = [
+  place("senate", "University Senate Building", "admin", 7.51865, 4.52349, "University administration and registry."),
+  place("library", "Hezekiah Oluwasanmi Library", "library", 7.51984, 4.52305, "Main university library."),
+  place("amphitheatre", "Amphitheatre", "student-life", 7.51924, 4.52213, "Open-air venue for events and gatherings."),
+  place("oduduwa", "Oduduwa Hall", "student-life", 7.5188, 4.52203, "Main auditorium for convocations and large events."),
+  place("sub", "Student Union Building (SUB)", "student-life", 7.51785, 4.52137, "Student union offices, eateries and shops."),
+  place("arts", "Faculty of Arts", "academic", 7.51974, 4.5241, "Arts departments, AUD I and AUD II lecture theatres."),
+  place("social-sciences", "Faculty of Social Sciences", "academic", 7.5213, 4.52269, "Social science departments."),
+  place("law", "Faculty of Law", "academic", 7.52094, 4.52237, "Law faculty."),
+  place("education", "Faculty of Education", "academic", 7.52074, 4.5236, "Education faculty."),
+  place("administration", "Faculty of Administration", "academic", 7.52053, 4.52231, "Administration faculty."),
+  place("first-bank-lt", "First Bank Lecture Theatre", "academic", 7.52179, 4.5239, "Large lecture theatre."),
+  place("hslt", "Humanities Lecture Theatres (HSLT)", "academic", 7.51672, 4.52491, "HSLT A, B and C lecture theatres."),
+  place("technology", "Faculty of Technology", "academic", 7.51786, 4.52831, "Engineering departments and lecture theatres."),
+  place("central-science-lab", "Central Science Laboratory", "academic", 7.52022, 4.52753, "Shared science laboratories."),
+  place("pharmacy", "Faculty of Pharmacy", "academic", 7.51676, 4.52713, "Pharmacy faculty."),
+  place("1000-seater", "1000 Seater Lecture Theatre", "academic", 7.52084, 4.51965, "Large lecture theatre."),
+  place("health-centre", "OAU Health Centre", "health", 7.52027, 4.51636, "Campus clinic and emergency care."),
+  place("sports-centre", "OAU Sports Centre", "student-life", 7.51525, 4.52095, "Sports centre and main bowl."),
+  place("banks", "Banking area", "student-life", 7.51462, 4.52335, "Campus banks and ATMs."),
+  place("moremi", "Moremi Hall", "hall", 7.51965, 4.5186, "Hall of residence."),
+  place("fajuyi", "Adekunle Fajuyi Hall", "hall", 7.51735, 4.51774, "Hall of residence."),
+  place("awolowo", "Awolowo Hall", "hall", 7.52058, 4.51472, "Hall of residence."),
+  place("etf", "ETF Hall", "hall", 7.51828, 4.51466, "Hall of residence."),
+  place("alumni", "Alumni Hall", "hall", 7.52161, 4.51718, "Hall of residence."),
+  place("mozambique", "Mozambique Hall", "hall", 7.52286, 4.51413, "Hall of residence."),
+  place("angola", "Angola Hall", "hall", 7.5218, 4.51247, "Hall of residence."),
+  place("postgraduate-hall", "Postgraduate Hall", "hall", 7.52271, 4.51647, "Postgraduate hall of residence."),
 ];
 
-export const places: Place[] = [
-  {
-    id: "senate",
-    name: "Senate Building",
-    category: "admin",
-    nodeId: "n-senate",
-    description: "University administration, registry and the Vice-Chancellor's office.",
-    accessibility: {
-      stepFreeEntrance: true,
-      ramp: true,
-      lift: true,
-      accessibleToilet: false,
-      notes: "Use the forecourt ramp; the amphitheatre-side entrance has steps.",
-    },
-  },
-  {
-    id: "library",
-    name: "Hezekiah Oluwasanmi Library",
-    category: "library",
-    nodeId: "n-lib",
-    description: "Main university library.",
-    accessibility: {
-      stepFreeEntrance: true,
-      ramp: true,
-      lift: true,
-      accessibleToilet: true,
-      notes: "Ramp at the front entrance; the stairs from the Senate side are not step-free.",
-    },
-  },
-  {
-    id: "amphitheatre",
-    name: "Amphitheatre",
-    category: "student-life",
-    nodeId: "n-amph",
-    description: "Open-air venue for events and gatherings.",
-    accessibility: {
-      stepFreeEntrance: true,
-      ramp: false,
-      lift: false,
-      accessibleToilet: false,
-      notes: "Step-free access only to the lowest level.",
-    },
-  },
-  {
-    id: "sub",
-    name: "Student Union Building (SUB)",
-    category: "student-life",
-    nodeId: "n-sub",
-    description: "Student union offices, eateries and shops.",
-    accessibility: {
-      stepFreeEntrance: true,
-      ramp: true,
-      lift: false,
-      accessibleToilet: false,
-    },
-  },
-  {
-    id: "science",
-    name: "Faculty of Science",
-    category: "academic",
-    nodeId: "n-sci",
-    description: "Science lecture theatres and laboratories.",
-    accessibility: {
-      stepFreeEntrance: true,
-      ramp: true,
-      lift: false,
-      accessibleToilet: false,
-      notes: "Upper-floor labs are stairs only.",
-    },
-  },
-  {
-    id: "technology",
-    name: "Faculty of Technology",
-    category: "academic",
-    nodeId: "n-tech",
-    description: "Engineering departments, workshops and lecture theatres.",
-    accessibility: {
-      stepFreeEntrance: true,
-      ramp: true,
-      lift: true,
-      accessibleToilet: true,
-    },
-  },
-  {
-    id: "arts",
-    name: "Faculty of Arts",
-    category: "academic",
-    nodeId: "n-arts",
-    description: "Arts departments and lecture rooms.",
-    accessibility: {
-      stepFreeEntrance: true,
-      ramp: false,
-      lift: false,
-      accessibleToilet: false,
-      notes: "Step-free from the east walkway only.",
-    },
-  },
-  {
-    id: "social-sciences",
-    name: "Faculty of Social Sciences",
-    category: "academic",
-    nodeId: "n-socsci",
-    description: "Social science departments and lecture rooms.",
-    accessibility: {
-      stepFreeEntrance: true,
-      ramp: true,
-      lift: false,
-      accessibleToilet: false,
-    },
-  },
-  {
-    id: "oduduwa",
-    name: "Oduduwa Hall",
-    category: "student-life",
-    nodeId: "n-oduduwa",
-    description: "Main auditorium for convocations, plays and large events.",
-    accessibility: {
-      stepFreeEntrance: true,
-      ramp: true,
-      lift: false,
-      accessibleToilet: true,
-      notes: "Wheelchair spaces at the rear of the stalls.",
-    },
-  },
-  {
-    id: "health-centre",
-    name: "University Health Centre",
-    category: "health",
-    nodeId: "n-health",
-    description: "Campus clinic and emergency care.",
-    accessibility: {
-      stepFreeEntrance: true,
-      ramp: true,
-      lift: false,
-      accessibleToilet: true,
-      notes: "Wheelchairs available at reception.",
-    },
-  },
-  {
-    id: "moremi",
-    name: "Moremi Hall",
-    category: "hall",
-    nodeId: "n-moremi",
-    description: "Female hall of residence.",
-    accessibility: {
-      stepFreeEntrance: true,
-      ramp: false,
-      lift: false,
-      accessibleToilet: false,
-    },
-  },
-  {
-    id: "awolowo",
-    name: "Awolowo Hall",
-    category: "hall",
-    nodeId: "n-awo",
-    description: "Male hall of residence.",
-    accessibility: {
-      stepFreeEntrance: true,
-      ramp: false,
-      lift: false,
-      accessibleToilet: false,
-    },
-  },
-  {
-    id: "fajuyi",
-    name: "Fajuyi Hall",
-    category: "hall",
-    nodeId: "n-fajuyi",
-    description: "Male hall of residence.",
-    accessibility: {
-      stepFreeEntrance: false,
-      ramp: false,
-      lift: false,
-      accessibleToilet: false,
-      notes: "Main entrance has three steps.",
-    },
-  },
-  {
-    id: "shuttle-park",
-    name: "Campus Shuttle Park",
-    category: "transport",
-    nodeId: "n-bus",
-    description: "Pick-up and drop-off point for campus shuttles.",
-    accessibility: {
-      stepFreeEntrance: true,
-      ramp: false,
-      lift: false,
-      accessibleToilet: false,
-      notes: "Covered waiting shelter with seating.",
-    },
-  },
-];
+/** Benches and shelters found during the survey. */
+const restPoints: RestPointInput[] = [];
+
+export const campus = createGraph(nodes, edges, places, restPoints);

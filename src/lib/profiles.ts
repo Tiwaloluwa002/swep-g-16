@@ -14,6 +14,7 @@ export const PROFILES: Record<ProfileId, MobilityProfile> = {
     surfacePenalty: { paved: 1, rough: 1.1, unpaved: 1.2 },
     noKerbRampPenalty: 1,
     noTactilePenalty: 1,
+    busyRoadPenalty: 1,
   },
   wheelchair: {
     id: "wheelchair",
@@ -28,6 +29,7 @@ export const PROFILES: Record<ProfileId, MobilityProfile> = {
     surfacePenalty: { paved: 1, rough: 2.5, unpaved: 4 },
     noKerbRampPenalty: 3,
     noTactilePenalty: 1,
+    busyRoadPenalty: 1.15,
   },
   "visually-impaired": {
     id: "visually-impaired",
@@ -42,11 +44,12 @@ export const PROFILES: Record<ProfileId, MobilityProfile> = {
     surfacePenalty: { paved: 1, rough: 1.5, unpaved: 2 },
     noKerbRampPenalty: 1.5,
     noTactilePenalty: 1.3,
+    busyRoadPenalty: 1.4,
   },
   "limited-mobility": {
     id: "limited-mobility",
     label: "Limited mobility",
-    description: "For crutches, injuries or fatigue: avoids steps and steep slopes, prefers resting spots.",
+    description: "For crutches, injuries or fatigue: avoids steps and steep slopes, and points out places to rest.",
     speed: 0.7,
     allowSteps: true,
     maxSlopePercent: 10,
@@ -56,6 +59,7 @@ export const PROFILES: Record<ProfileId, MobilityProfile> = {
     surfacePenalty: { paved: 1, rough: 2, unpaved: 3 },
     noKerbRampPenalty: 1.5,
     noTactilePenalty: 1,
+    busyRoadPenalty: 1.1,
   },
 };
 

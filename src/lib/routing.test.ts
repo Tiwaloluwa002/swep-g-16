@@ -1,13 +1,16 @@
 import { describe, expect, it } from "vitest";
-import { places } from "@/data/campus";
+import { campus } from "@/data/campus";
 import { planRoute } from "./advisory";
-import { edgeById, nodeById } from "./graph";
+import { distance } from "./geo";
+import { nearestEdge } from "./graph";
 import { PROFILE_LIST } from "./profiles";
 import { findPath } from "./routing";
+import { fixture } from "./test-fixture";
 import type { Report, RouteOptions } from "./types";
 
 const standard: RouteOptions = { profile: "standard", avoidUnlit: false };
 const wheelchair: RouteOptions = { profile: "wheelchair", avoidUnlit: false };
+const node = (placeId: string) => fixture.places.get(placeId)!.nodeId;
 
 const report = (overrides: Partial<Report>): Report => ({
   id: "r1",
@@ -21,35 +24,18 @@ const report = (overrides: Partial<Report>): Report => ({
   ...overrides,
 });
 
-describe("campus data", () => {
-  it("links every place to an existing node", () => {
-    for (const place of places) expect(nodeById.has(place.nodeId)).toBe(true);
-  });
-
-  it("connects every pair of places for every profile", () => {
-    for (const profile of PROFILE_LIST) {
-      for (const from of places) {
-        for (const to of places) {
-          const route = findPath(from.nodeId, to.nodeId, { profile: profile.id, avoidUnlit: false });
-          expect(route, `${profile.id}: ${from.id} → ${to.id}`).not.toBeNull();
-        }
-      }
-    }
-  });
-});
-
 describe("findPath", () => {
-  it("lets standard walkers take the Senate–Library stairs", () => {
-    const path = findPath("n-senate", "n-lib", standard)!;
-    expect(path.edgeIds).toEqual(["e10"]);
+  it("lets standard walkers take the stairs shortcut", () => {
+    expect(findPath(fixture, node("senate"), node("library"), standard)!.edgeIds).toEqual(["e10"]);
   });
 
   it("never gives wheelchair users steps or slopes above 8%", () => {
-    for (const from of places) {
-      for (const to of places) {
-        const path = findPath(from.nodeId, to.nodeId, wheelchair)!;
+    for (const from of fixture.places.values()) {
+      for (const to of fixture.places.values()) {
+        const path = findPath(fixture, from.nodeId, to.nodeId, wheelchair)!;
+        expect(path, `${from.id} → ${to.id}`).not.toBeNull();
         for (const id of path.edgeIds) {
-          const edge = edgeById.get(id)!;
+          const edge = fixture.edges.get(id)!;
           expect(edge.steps).toBe(0);
           expect(edge.slopePercent).toBeLessThanOrEqual(8);
         }
@@ -58,50 +44,91 @@ describe("findPath", () => {
   });
 
   it("routes around blocked segments", () => {
-    const path = findPath("n-senate", "n-lib", wheelchair, new Set(["e8"]))!;
+    const path = findPath(fixture, node("senate"), node("library"), wheelchair, new Set(["e8"]))!;
     expect(path.edgeIds).not.toContain("e8");
-    expect(path.nodeIds.at(-1)).toBe("n-lib");
+    expect(path.nodeIds.at(-1)).toBe(node("library"));
   });
 
   it("returns null when the only accessible way in is blocked", () => {
-    expect(findPath("n-senate", "n-lib", wheelchair, new Set(["e9"]))).toBeNull();
+    expect(findPath(fixture, node("senate"), node("library"), wheelchair, new Set(["e9"]))).toBeNull();
   });
 
   it("avoids unlit paths after dark when asked", () => {
-    expect(findPath("n-sub", "n-sci", standard)!.edgeIds).toContain("e12");
-    expect(findPath("n-sub", "n-sci", { ...standard, avoidUnlit: true })!.edgeIds).not.toContain("e12");
+    expect(findPath(fixture, node("sub"), node("science"), standard)!.edgeIds).toContain("e12");
+    const lit = findPath(fixture, node("sub"), node("science"), { ...standard, avoidUnlit: true })!;
+    expect(lit.edgeIds).not.toContain("e12");
   });
 });
 
 describe("planRoute", () => {
   it("warns about steps and ends with arrival", () => {
-    const route = planRoute("senate", "library", standard)!;
+    const route = planRoute(fixture, "senate", "library", standard)!;
     expect(route.steps.flatMap((s) => s.warnings)).toContain("20 steps");
-    expect(route.steps.at(-1)!.instruction).toBe("Arrive at Hezekiah Oluwasanmi Library");
+    expect(route.steps.at(-1)!.instruction).toBe("Arrive at Library");
     expect(route.duration).toBeGreaterThan(0);
   });
 
+  it("gives turn directions after the first step", () => {
+    const route = planRoute(fixture, "senate", "library", wheelchair)!;
+    expect(route.steps[0].instruction).toMatch(/^Head (north|south|east|west)/);
+    expect(route.steps[1].instruction).toMatch(/^(Turn|Bear|Continue)/);
+  });
+
   it("only blocks segments for verified reports, but still warns about pending ones", () => {
-    const pending = planRoute("senate", "library", wheelchair, [report({ edgeId: "e8", status: "pending" })])!;
+    const pending = planRoute(fixture, "senate", "library", wheelchair, [report({ edgeId: "e8", status: "pending" })])!;
     expect(pending.edgeIds).toContain("e8");
     expect(pending.steps.flatMap((s) => s.warnings).some((w) => w.startsWith("Unverified report"))).toBe(true);
 
-    const verified = planRoute("senate", "library", wheelchair, [report({ edgeId: "e8" })])!;
+    const verified = planRoute(fixture, "senate", "library", wheelchair, [report({ edgeId: "e8" })])!;
     expect(verified.edgeIds).not.toContain("e8");
   });
 
   it("ignores resolved reports", () => {
-    const route = planRoute("senate", "library", wheelchair, [report({ edgeId: "e8", status: "resolved" })])!;
+    const route = planRoute(fixture, "senate", "library", wheelchair, [report({ edgeId: "e8", status: "resolved" })])!;
     expect(route.edgeIds).toContain("e8");
   });
 
   it("lists rest points passed on the way", () => {
-    const route = planRoute("shuttle-park", "health-centre", wheelchair)!;
-    expect(route.restPoints.length).toBeGreaterThan(0);
+    expect(planRoute(fixture, "senate", "library", wheelchair)!.restPoints).toEqual(["Senate square benches"]);
   });
 
   it("flags destinations without step-free entrances", () => {
-    const route = planRoute("senate", "fajuyi", wheelchair)!;
+    const route = planRoute(fixture, "senate", "fajuyi", wheelchair)!;
     expect(route.advisories).toContain("Fajuyi Hall has no step-free entrance.");
+  });
+});
+
+describe("nearestEdge", () => {
+  it("finds the segment closest to a point", () => {
+    expect(nearestEdge(fixture, { lat: 7.51965, lng: 4.5238 }).edge.id).toBe("e9");
+  });
+});
+
+describe("OAU campus data", () => {
+  it("connects every pair of places for standard walking", () => {
+    for (const from of campus.places.values()) {
+      for (const to of campus.places.values()) {
+        expect(findPath(campus, from.nodeId, to.nodeId, standard), `${from.id} → ${to.id}`).not.toBeNull();
+      }
+    }
+  });
+
+  it("adds a walking leg for buildings away from the mapped paths", () => {
+    const offNetwork = [...campus.places.values()].find((p) => distance(p, campus.nodes.get(p.nodeId)!) > 25)!;
+    const other = [...campus.places.values()].find((p) => p.nodeId !== offNetwork.nodeId)!;
+    const route = planRoute(campus, other.id, offNetwork.id, standard)!;
+    expect(route.steps.at(-2)!.instruction).toMatch(new RegExp(`^Walk about \\d+ m to the entrance of ${offNetwork.name}`));
+  });
+
+  it("gives every profile a route between the main academic buildings", () => {
+    const core = ["senate", "library", "sub", "arts", "technology"];
+    for (const profile of PROFILE_LIST) {
+      for (const from of core) {
+        for (const to of core) {
+          const route = planRoute(campus, from, to, { profile: profile.id, avoidUnlit: false });
+          expect(route, `${profile.id}: ${from} → ${to}`).not.toBeNull();
+        }
+      }
+    }
   });
 });

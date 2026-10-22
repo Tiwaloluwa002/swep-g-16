@@ -2,29 +2,37 @@ export type LatLng = { lat: number; lng: number };
 
 export type Surface = "paved" | "rough" | "unpaved";
 
-/** A point on the walking network: a building entrance or a path junction. */
+/** A junction or end point on the walking network. */
 export type CampusNode = LatLng & {
   id: string;
   /** Present when there is somewhere to sit or shelter at this point. */
   restPoint?: string;
 };
 
-/** A walkable segment between two nodes. Edges are two-way. */
+/**
+ * A walkable segment between two nodes. Edges are two-way.
+ * For tri-state fields, null means "not yet recorded".
+ */
 export type CampusEdge = {
   id: string;
   from: string;
   to: string;
-  name: string;
+  name: string | null;
+  /** OpenStreetMap highway type: footway, steps, tertiary, service… */
+  highway: string;
+  /** [lat, lng] points from `from` to `to`. */
+  geometry: [number, number][];
+  /** Metres. */
+  length: number;
   surface: Surface;
   /** Steepest gradient along the segment, in percent (8 ≈ 1:12 ramp limit). */
   slopePercent: number;
   /** Number of steps; 0 means the segment is step-free. */
   steps: number;
-  lit: boolean;
-  shaded: boolean;
-  tactilePaving: boolean;
+  lit: boolean | null;
+  tactilePaving: boolean | null;
   /** Dropped kerbs wherever the path meets a road. */
-  kerbRamps: boolean;
+  kerbRamps: boolean | null;
 };
 
 export type PlaceCategory =
@@ -36,23 +44,29 @@ export type PlaceCategory =
   | "student-life"
   | "transport";
 
+/** null means the feature has not been surveyed yet. */
 export type PlaceAccessibility = {
-  stepFreeEntrance: boolean;
-  ramp: boolean;
-  lift: boolean;
-  accessibleToilet: boolean;
+  stepFreeEntrance: boolean | null;
+  ramp: boolean | null;
+  lift: boolean | null;
+  accessibleToilet: boolean | null;
   notes?: string;
 };
 
-export type Place = {
+export type PlaceInput = LatLng & {
   id: string;
   name: string;
   category: PlaceCategory;
-  /** The network node at the place's main accessible entrance. */
-  nodeId: string;
   description: string;
   accessibility: PlaceAccessibility;
 };
+
+export type Place = PlaceInput & {
+  /** The network node routes start and end at, nearest the building. */
+  nodeId: string;
+};
+
+export type RestPointInput = LatLng & { name: string };
 
 export type ProfileId =
   | "standard"
@@ -80,6 +94,8 @@ export type MobilityProfile = {
   noKerbRampPenalty: number;
   /** Multiplier for segments without tactile paving. */
   noTactilePenalty: number;
+  /** Multiplier for main roads shared with traffic. */
+  busyRoadPenalty: number;
 };
 
 export type ReportType =
