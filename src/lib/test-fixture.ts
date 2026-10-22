@@ -32,6 +32,9 @@ const nodes: CampusNode[] = [
 ];
 const byId = new Map(nodes.map((n) => [n.id, n]));
 
+/** Terrain for the elevation profile: the fixture campus rises towards the north. */
+export const fixtureElevation = (node: CampusNode) => 250 + (node.lat - 7.5128) * 5000;
+
 const path = (
   id: string,
   from: string,
@@ -42,8 +45,6 @@ const path = (
   const a = byId.get(from)!;
   const b = byId.get(to)!;
   const length = distance(a, b);
-  // Every slope in the fixture climbs from `from` to `to`.
-  const rise = (length * (attrs.slopePercent ?? 2)) / 100;
   return {
     id,
     from,
@@ -55,7 +56,7 @@ const path = (
       [b.lat, b.lng],
     ],
     length,
-    elevation: [100, 100 + rise],
+    elevation: [fixtureElevation(a), fixtureElevation(b)],
     surface: "paved",
     slopePercent: 2,
     steps: 0,

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { campus } from "@/data/campus";
+import { campus, places } from "@/data/campus";
 import { formatOpeningHours, groupPlaces, nearbyPlaces, osmUrl } from "./places";
 
 describe("places", () => {
@@ -23,7 +23,7 @@ describe("places", () => {
     expect(near[0].distance).toBeLessThanOrEqual(near[2].distance);
   });
 
-  it("gives imported places unique ids", () => {
-    expect(new Set(campus.places.keys()).size).toBe(campus.places.size);
+  it("gives every place a unique id", () => {
+    expect(campus.places.size).toBe(places.length);
   });
 });

@@ -7,12 +7,14 @@ import { formatDistance, formatDuration, planRoute } from "@/lib/advisory";
 import { nearestEdge } from "@/lib/graph";
 import { PROFILE_LIST, PROFILES } from "@/lib/profiles";
 import { isActive } from "@/lib/reports";
+import { routeDetails } from "@/lib/route-details";
 import { updateSettings, useSettings } from "@/lib/settings";
 import { speak, stopSpeaking, useSpeechSupported } from "@/lib/speech";
 import type { LatLng, Report, RouteResult } from "@/lib/types";
 import { PlaceDetails } from "./place-details";
 import { PlaceSelect } from "./place-select";
 import { ReportForm } from "./report-form";
+import { RouteDetailsPanel } from "./route-details-panel";
 import { SettingsPanel } from "./settings-panel";
 
 const CampusMap = dynamic(() => import("./campus-map"), {
@@ -58,6 +60,7 @@ export function RoutePlanner() {
     () => planRoute(campus, fromId, toId, { profile: settings.profile, avoidUnlit }, reports),
     [fromId, toId, settings.profile, avoidUnlit, reports],
   );
+  const details = useMemo(() => route && routeDetails(campus, route, fromId, toId), [route, fromId, toId]);
 
   useEffect(() => {
     if (settings.voice && route) speak(spokenDirections(route, destination.name));
@@ -253,6 +256,7 @@ export function RoutePlanner() {
                         ))}
                       </ul>
                     )}
+                    {details && <RouteDetailsPanel details={details} />}
                   </>
                 )}
               </section>
