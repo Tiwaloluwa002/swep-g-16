@@ -10,10 +10,10 @@ import { isActive } from "@/lib/reports";
 import { updateSettings, useSettings } from "@/lib/settings";
 import { speak, stopSpeaking, useSpeechSupported } from "@/lib/speech";
 import type { LatLng, Report, RouteResult } from "@/lib/types";
+import { PlaceDetails } from "./place-details";
+import { PlaceSelect } from "./place-select";
 import { ReportForm } from "./report-form";
 import { SettingsPanel } from "./settings-panel";
-
-const places = [...campus.places.values()].sort((a, b) => a.name.localeCompare(b.name));
 
 const CampusMap = dynamic(() => import("./campus-map"), {
   ssr: false,
@@ -29,22 +29,6 @@ function spokenDirections(route: RouteResult, destination: string): string {
   ].join(". ");
 }
 
-function Badge({ ok, children }: { ok: boolean | null; children: React.ReactNode }) {
-  const style =
-    ok === true
-      ? "border-ok text-ok"
-      : ok === false
-        ? "border-border text-muted line-through"
-        : "border-dashed border-border text-muted";
-  return (
-    <li className={`rounded-full border px-2.5 py-0.5 text-sm ${style}`}>
-      <span className="sr-only">{ok === true ? "Has " : ok === false ? "No " : ""}</span>
-      {children}
-      {ok === null && <span className="text-xs"> · not surveyed</span>}
-    </li>
-  );
-}
-
 export function RoutePlanner() {
   const settings = useSettings();
   const canSpeak = useSpeechSupported();
@@ -57,6 +41,8 @@ export function RoutePlanner() {
   const [picking, setPicking] = useState(false);
   const [picked, setPicked] = useState<{ point: LatLng; edgeId: string } | null>(null);
   const [chosenEdgeId, setChosenEdgeId] = useState<string>();
+  /** A place opened from the map or "Nearby"; null shows the destination. */
+  const [detailsId, setDetailsId] = useState<string | null>(null);
 
   const loadReports = useCallback(() => {
     fetch("/api/reports")
@@ -78,7 +64,16 @@ export function RoutePlanner() {
     return stopSpeaking;
   }, [settings.voice, route, destination.name]);
 
-  const setPlace = (placeId: string, end: "from" | "to") => (end === "from" ? setFromId(placeId) : setToId(placeId));
+  const setPlace = (placeId: string, end: "from" | "to") => {
+    if (end === "from") setFromId(placeId);
+    else setToId(placeId);
+    setDetailsId(null);
+  };
+  const showDetails = (placeId: string) => {
+    setDetailsId(placeId === toId ? null : placeId);
+    requestAnimationFrame(() => document.getElementById("place-details")?.scrollIntoView({ behavior: "smooth" }));
+  };
+  const detailsPlace = campus.places.get(detailsId ?? toId)!;
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -169,18 +164,11 @@ export function RoutePlanner() {
                         <label htmlFor={`place-${end}`} className="text-sm font-semibold">
                           {end === "from" ? "From" : "To"}
                         </label>
-                        <select
+                        <PlaceSelect
                           id={`place-${end}`}
                           value={end === "from" ? fromId : toId}
-                          onChange={(e) => setPlace(e.target.value, end)}
-                          className="w-full min-w-0 rounded-md border border-border bg-surface px-3 py-2"
-                        >
-                          {places.map((place) => (
-                            <option key={place.id} value={place.id}>
-                              {place.name}
-                            </option>
-                          ))}
-                        </select>
+                          onChange={(id) => setPlace(id, end)}
+                        />
                       </div>
                     ))}
                   </div>
@@ -258,29 +246,25 @@ export function RoutePlanner() {
                         <strong>Places to rest on the way:</strong> {route.restPoints.join(", ")}.
                       </p>
                     )}
+                    {route.advisories.length > 0 && (
+                      <ul className="flex flex-col gap-1 text-sm">
+                        {route.advisories.map((a) => (
+                          <li key={a}>• {a}</li>
+                        ))}
+                      </ul>
+                    )}
                   </>
                 )}
               </section>
 
-              <section aria-labelledby="dest-heading" className="flex flex-col gap-2">
-                <h2 id="dest-heading" className="text-lg font-bold">
-                  {destination.name}
-                </h2>
-                <p className="text-sm text-muted">{destination.description}</p>
-                <ul className="flex flex-wrap gap-2" aria-label="Accessibility features">
-                  <Badge ok={destination.accessibility.stepFreeEntrance}>Step-free entrance</Badge>
-                  <Badge ok={destination.accessibility.ramp}>Ramp</Badge>
-                  <Badge ok={destination.accessibility.lift}>Lift</Badge>
-                  <Badge ok={destination.accessibility.accessibleToilet}>Accessible toilet</Badge>
-                </ul>
-                {route && route.advisories.length > 0 && (
-                  <ul className="flex flex-col gap-1 text-sm">
-                    {route.advisories.map((a) => (
-                      <li key={a}>• {a}</li>
-                    ))}
-                  </ul>
-                )}
-              </section>
+              <div id="place-details" className="scroll-mt-4 rounded-md border border-border p-4">
+                <PlaceDetails
+                  place={detailsPlace}
+                  reports={reports}
+                  onGo={(id) => setPlace(id, "to")}
+                  onClose={detailsId ? () => setDetailsId(null) : undefined}
+                />
+              </div>
 
               <button
                 type="button"
@@ -306,6 +290,7 @@ export function RoutePlanner() {
             }}
             highlightEdgeId={reporting ? (picked?.edgeId ?? chosenEdgeId) : undefined}
             onSetPlace={setPlace}
+            onShowDetails={showDetails}
           />
           <MapLegend />
         </div>

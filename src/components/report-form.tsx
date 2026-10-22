@@ -4,6 +4,7 @@ import { type FormEvent, useState } from "react";
 import { campus } from "@/data/campus";
 import { edgeName, nearestEdge } from "@/lib/graph";
 import { REPORT_TYPES } from "@/lib/reports";
+import { PlaceSelect } from "./place-select";
 import type { LatLng, ReportType } from "@/lib/types";
 
 type Props = {
@@ -15,8 +16,6 @@ type Props = {
   onSubmitted: () => void;
   onClose: () => void;
 };
-
-const places = [...campus.places.values()].sort((a, b) => a.name.localeCompare(b.name));
 
 function midpoint(edgeId: string): LatLng {
   const geometry = campus.edges.get(edgeId)!.geometry;
@@ -113,22 +112,15 @@ export function ReportForm({ picked, picking, onTogglePicking, onEdgeChange, onS
           <label htmlFor="report-near" className="text-sm font-semibold">
             Near which building?
           </label>
-          <select
+          <PlaceSelect
             id="report-near"
             value={picked ? "" : nearPlaceId}
-            onChange={(e) => {
-              setNearPlaceId(e.target.value);
-              onEdgeChange(e.target.value ? pathNear(e.target.value) : undefined);
+            onChange={(id) => {
+              setNearPlaceId(id);
+              onEdgeChange(id ? pathNear(id) : undefined);
             }}
-            className="w-full min-w-0 rounded-md border border-border bg-surface px-3 py-2"
-          >
-            <option value="">{picked ? "Picked on the map" : "Choose a building…"}</option>
-            {places.map((place) => (
-              <option key={place.id} value={place.id}>
-                {place.name}
-              </option>
-            ))}
-          </select>
+            placeholder={picked ? "Picked on the map" : "Choose a building…"}
+          />
           <button
             type="button"
             onClick={onTogglePicking}
@@ -148,19 +140,7 @@ export function ReportForm({ picked, picking, onTogglePicking, onEdgeChange, onS
           <label htmlFor="report-place" className="text-sm font-semibold">
             Building
           </label>
-          <select
-            id="report-place"
-            value={placeId}
-            onChange={(e) => setPlaceId(e.target.value)}
-            className="w-full min-w-0 rounded-md border border-border bg-surface px-3 py-2"
-          >
-            <option value="">Choose a building…</option>
-            {places.map((place) => (
-              <option key={place.id} value={place.id}>
-                {place.name}
-              </option>
-            ))}
-          </select>
+          <PlaceSelect id="report-place" value={placeId} onChange={setPlaceId} placeholder="Choose a building…" />
         </div>
       )}
 

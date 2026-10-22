@@ -19,6 +19,7 @@ export type CampusMapProps = {
   onPick: (point: LatLng) => void;
   highlightEdgeId?: string;
   onSetPlace: (placeId: string, end: "from" | "to") => void;
+  onShowDetails: (placeId: string) => void;
 };
 
 const edges = [...campus.edges.values()];
@@ -65,6 +66,7 @@ export default function CampusMap({
   onPick,
   highlightEdgeId,
   onSetPlace,
+  onShowDetails,
 }: CampusMapProps) {
   return (
     <MapContainer
@@ -164,6 +166,13 @@ export default function CampusMap({
                   onClick={() => onSetPlace(place.id, "to")}
                 >
                   Go here
+                </button>
+                <button
+                  type="button"
+                  className="rounded border border-slate-400 px-2 py-1"
+                  onClick={() => onShowDetails(place.id)}
+                >
+                  Details
                 </button>
               </div>
             </Popup>
