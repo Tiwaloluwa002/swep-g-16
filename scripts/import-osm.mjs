@@ -1,6 +1,7 @@
-// Imports the OAU walking network from OpenStreetMap and estimates slopes
-// from terrain elevation. Run with `npm run import:osm`; it rewrites
-// src/data/osm-network.json. Map data © OpenStreetMap contributors (ODbL).
+// Imports the OAU walking network and named places from OpenStreetMap, and
+// estimates slopes from terrain elevation. Run with `npm run import:osm`; it
+// rewrites src/data/osm-network.json and src/data/osm-places.json.
+// Map data © OpenStreetMap contributors (ODbL).
 //
 // The output collapses each OSM way into edges between "graph nodes":
 // way endpoints and junctions shared by more than one way.
@@ -11,6 +12,7 @@ const BBOX = [7.505, 4.505, 7.53, 4.54]; // south, west, north, east around the 
 const WALKABLE =
   "footway|path|pedestrian|steps|living_street|residential|unclassified|service|tertiary|secondary|track|cycleway";
 const OUT = new URL("../src/data/osm-network.json", import.meta.url);
+const PLACES_OUT = new URL("../src/data/osm-places.json", import.meta.url);
 const USER_AGENT = "aacnras-oau-swep-project/0.1";
 
 const query = `[out:json][timeout:120];
@@ -18,11 +20,22 @@ way["highway"~"^(${WALKABLE})$"]["access"!~"^(private|no)$"](${BBOX.join(",")});
 (._;>;);
 out body;`;
 
-function fetchOsm() {
+// Named buildings and amenities; `out center` gives one point per building outline.
+const placesQuery = `[out:json][timeout:120];
+nwr["name"][~"^(amenity|building|leisure|shop|office|healthcare|tourism)$"~"."](${BBOX.join(",")});
+out center tags;`;
+
+/** Tags worth keeping for building details. */
+const PLACE_TAGS = [
+  "amenity", "building", "leisure", "shop", "office", "healthcare", "tourism", "religion",
+  "building:levels", "opening_hours", "wheelchair", "website", "phone", "operator", "cuisine", "description",
+];
+
+function overpass(data) {
   return fetchWithRetry("https://overpass-api.de/api/interpreter", {
     method: "POST",
     headers: { "user-agent": USER_AGENT, accept: "application/json" },
-    body: new URLSearchParams({ data: query }),
+    body: new URLSearchParams({ data }),
   });
 }
 
@@ -91,7 +104,7 @@ function surfaceOf(tags) {
   return "paved";
 }
 
-const osm = await fetchOsm();
+const osm = await overpass(query);
 const osmNodes = new Map(osm.elements.filter((e) => e.type === "node").map((n) => [n.id, n]));
 const ways = osm.elements.filter((e) => e.type === "way");
 console.log(`Fetched ${ways.length} ways and ${osmNodes.size} nodes`);
@@ -129,6 +142,7 @@ for (const way of ways) {
       name: tags.name ?? null,
       highway: tags.highway,
       geometry: points.map((p) => [Number(p.lat.toFixed(6)), Number(p.lon.toFixed(6))]),
+      elevation: points.map((p) => Math.round(elevation.get(p.id) * 10) / 10),
       length: Math.round(length * 10) / 10,
       surface: surfaceOf(tags),
       slopePercent: isSteps ? 0 : maxSlope(points, elevation),
@@ -161,3 +175,19 @@ await writeFile(
   ) + "\n",
 );
 console.log(`Wrote ${nodes.length} graph nodes and ${edges.length} edges`);
+
+const [south, west, north, east] = BBOX;
+const placeElements = (await overpass(placesQuery)).elements;
+const osmPlaces = placeElements
+  .map((e) => ({ id: `${e.type[0]}${e.id}`, lat: e.center?.lat ?? e.lat, lng: e.center?.lon ?? e.lon, tags: e.tags }))
+  .filter((p) => p.lat >= south && p.lat <= north && p.lng >= west && p.lng <= east)
+  .map((p) => ({
+    id: p.id,
+    name: p.tags.name.trim(),
+    lat: Number(p.lat.toFixed(6)),
+    lng: Number(p.lng.toFixed(6)),
+    tags: Object.fromEntries(PLACE_TAGS.filter((t) => p.tags[t]).map((t) => [t, p.tags[t]])),
+  }))
+  .sort((a, b) => a.name.localeCompare(b.name));
+await writeFile(PLACES_OUT, JSON.stringify(osmPlaces, null, 1) + "\n");
+console.log(`Wrote ${osmPlaces.length} named places`);

@@ -1,0 +1,868 @@
+[
+ {
+  "id": "w617712421",
+  "name": "1000 Seater Lecture Theatre",
+  "lat": 7.520842,
+  "lng": 4.519649,
+  "tags": {
+   "building": "university"
+  }
+ },
+ {
+  "id": "w618765176",
+  "name": "Access Bank",
+  "lat": 7.51356,
+  "lng": 4.523288,
+  "tags": {
+   "amenity": "bank",
+   "building": "yes",
+   "opening_hours": "Mo-Sa 08:00-16:00"
+  }
+ },
+ {
+  "id": "w619368836",
+  "name": "Adekunle Fajuyi Hall of Residence",
+  "lat": 7.517349,
+  "lng": 4.517744,
+  "tags": {
+   "tourism": "hostel"
+  }
+ },
+ {
+  "id": "n5688128327",
+  "name": "AFRIGIST (Ex. RECTAS) O.A.U Campus Ile-Ife",
+  "lat": 7.505538,
+  "lng": 4.524461,
+  "tags": {
+   "amenity": "university",
+   "website": "https://afrigist.org/",
+   "operator": "African Regional Institute For Geospatial Information Science and Technology"
+  }
+ },
+ {
+  "id": "w595564742",
+  "name": "Ajose",
+  "lat": 7.521445,
+  "lng": 4.526697,
+  "tags": {
+   "building": "university"
+  }
+ },
+ {
+  "id": "n12093086827",
+  "name": "Akingbade Health Bay",
+  "lat": 7.505207,
+  "lng": 4.521631,
+  "tags": {
+   "amenity": "hospital",
+   "healthcare": "hospital"
+  }
+ },
+ {
+  "id": "w620253753",
+  "name": "Alumni Hall",
+  "lat": 7.521613,
+  "lng": 4.517177,
+  "tags": {
+   "tourism": "hostel"
+  }
+ },
+ {
+  "id": "w617712375",
+  "name": "Amphi Theatre",
+  "lat": 7.519244,
+  "lng": 4.522131,
+  "tags": {
+   "building": "university"
+  }
+ },
+ {
+  "id": "w617970611",
+  "name": "Anglo-Moz Car Park",
+  "lat": 7.522039,
+  "lng": 4.513517,
+  "tags": {
+   "amenity": "parking"
+  }
+ },
+ {
+  "id": "w617970610",
+  "name": "Angola Hall",
+  "lat": 7.5218,
+  "lng": 4.512473,
+  "tags": {
+   "tourism": "hostel"
+  }
+ },
+ {
+  "id": "w616403547",
+  "name": "ARCSSTE-E",
+  "lat": 7.511952,
+  "lng": 4.522188,
+  "tags": {
+   "building": "yes"
+  }
+ },
+ {
+  "id": "w617712371",
+  "name": "AUD I",
+  "lat": 7.520001,
+  "lng": 4.524376,
+  "tags": {
+   "building": "university"
+  }
+ },
+ {
+  "id": "w617712374",
+  "name": "AUD II",
+  "lat": 7.519432,
+  "lng": 4.524274,
+  "tags": {
+   "building": "university"
+  }
+ },
+ {
+  "id": "w618217519",
+  "name": "Awolowo Hall",
+  "lat": 7.520576,
+  "lng": 4.514717,
+  "tags": {
+   "tourism": "hostel"
+  }
+ },
+ {
+  "id": "w618241274",
+  "name": "BOOA",
+  "lat": 7.519112,
+  "lng": 4.525288,
+  "tags": {
+   "building": "university"
+  }
+ },
+ {
+  "id": "w618241275",
+  "name": "BOOB",
+  "lat": 7.519087,
+  "lng": 4.525446,
+  "tags": {
+   "building": "university"
+  }
+ },
+ {
+  "id": "w595564740",
+  "name": "BOOC",
+  "lat": 7.518874,
+  "lng": 4.525394,
+  "tags": {
+   "building": "yes"
+  }
+ },
+ {
+  "id": "w599038653",
+  "name": "Central Science Laboratory",
+  "lat": 7.520222,
+  "lng": 4.527528,
+  "tags": {
+   "building": "university"
+  }
+ },
+ {
+  "id": "w599038660",
+  "name": "Chemical Engineering LAB",
+  "lat": 7.519215,
+  "lng": 4.527626,
+  "tags": {
+   "building": "university"
+  }
+ },
+ {
+  "id": "w599038661",
+  "name": "Chemical Engineering Lecture Theatre",
+  "lat": 7.51938,
+  "lng": 4.528684,
+  "tags": {
+   "building": "university"
+  }
+ },
+ {
+  "id": "w595564741",
+  "name": "Civil Engineering Building",
+  "lat": 7.523079,
+  "lng": 4.529147,
+  "tags": {
+   "building": "university"
+  }
+ },
+ {
+  "id": "w618765180",
+  "name": "CTLW",
+  "lat": 7.511367,
+  "lng": 4.525076,
+  "tags": {
+   "building": "university"
+  }
+ },
+ {
+  "id": "w618765182",
+  "name": "CTLW",
+  "lat": 7.511018,
+  "lng": 4.525501,
+  "tags": {
+   "building": "university"
+  }
+ },
+ {
+  "id": "w615629090",
+  "name": "Daily Needs",
+  "lat": 7.523036,
+  "lng": 4.536802,
+  "tags": {
+   "building": "yes",
+   "shop": "convenience"
+  }
+ },
+ {
+  "id": "w617712423",
+  "name": "Department of Architecture",
+  "lat": 7.52123,
+  "lng": 4.518476,
+  "tags": {
+   "building": "university"
+  }
+ },
+ {
+  "id": "w617712417",
+  "name": "Ecobank",
+  "lat": 7.518053,
+  "lng": 4.52013,
+  "tags": {
+   "building": "yes"
+  }
+ },
+ {
+  "id": "w619368837",
+  "name": "ETF Hall",
+  "lat": 7.518282,
+  "lng": 4.51466,
+  "tags": {
+   "tourism": "hostel"
+  }
+ },
+ {
+  "id": "w616403572",
+  "name": "ETF Hall Mosque",
+  "lat": 7.51878,
+  "lng": 4.51469,
+  "tags": {
+   "building": "mosque"
+  }
+ },
+ {
+  "id": "w617712368",
+  "name": "Faculty of Administration",
+  "lat": 7.520533,
+  "lng": 4.522312,
+  "tags": {
+   "building": "university"
+  }
+ },
+ {
+  "id": "n14002430934",
+  "name": "Faculty of Arts",
+  "lat": 7.513514,
+  "lng": 4.525341,
+  "tags": {
+   "amenity": "school",
+   "religion": "multifaith",
+   "wheelchair": "limited"
+  }
+ },
+ {
+  "id": "w617712370",
+  "name": "Faculty of Arts (Block 1)",
+  "lat": 7.520319,
+  "lng": 4.524198,
+  "tags": {
+   "building": "university"
+  }
+ },
+ {
+  "id": "w617712372",
+  "name": "Faculty of Arts (Block 2)",
+  "lat": 7.51974,
+  "lng": 4.524105,
+  "tags": {
+   "building": "university"
+  }
+ },
+ {
+  "id": "w617712373",
+  "name": "Faculty of Arts (Block 3)",
+  "lat": 7.519165,
+  "lng": 4.524015,
+  "tags": {
+   "building": "university"
+  }
+ },
+ {
+  "id": "n14002430036",
+  "name": "Faculty Of Arts Main Building",
+  "lat": 7.519766,
+  "lng": 4.524136,
+  "tags": {
+   "building": "construction"
+  }
+ },
+ {
+  "id": "n14002436331",
+  "name": "Faculty of Education",
+  "lat": 7.513514,
+  "lng": 4.525341,
+  "tags": {
+   "amenity": "school",
+   "opening_hours": "Mo-Fr 06:00-18:00",
+   "wheelchair": "yes"
+  }
+ },
+ {
+  "id": "n14002459514",
+  "name": "Faculty of Education",
+  "lat": 7.513514,
+  "lng": 4.525341,
+  "tags": {
+   "amenity": "fixme",
+   "wheelchair": "no",
+   "description": "Academic building"
+  }
+ },
+ {
+  "id": "w617712367",
+  "name": "Faculty of Education",
+  "lat": 7.520738,
+  "lng": 4.523597,
+  "tags": {
+   "building": "university",
+   "building:levels": "3",
+   "wheelchair": "limited"
+  }
+ },
+ {
+  "id": "w617713665",
+  "name": "Faculty of Estate Design and Management",
+  "lat": 7.524771,
+  "lng": 4.526644,
+  "tags": {
+   "building": "university"
+  }
+ },
+ {
+  "id": "w617712365",
+  "name": "Faculty of Law",
+  "lat": 7.52094,
+  "lng": 4.522366,
+  "tags": {
+   "building": "university"
+  }
+ },
+ {
+  "id": "w618243408",
+  "name": "Faculty of Pharmacy",
+  "lat": 7.51676,
+  "lng": 4.527125,
+  "tags": {
+   "building": "university"
+  }
+ },
+ {
+  "id": "w617712366",
+  "name": "Faculty of Social Sciences",
+  "lat": 7.521303,
+  "lng": 4.522688,
+  "tags": {
+   "building": "university"
+  }
+ },
+ {
+  "id": "w599038666",
+  "name": "Faculty of Technology",
+  "lat": 7.517855,
+  "lng": 4.528308,
+  "tags": {
+   "building": "university"
+  }
+ },
+ {
+  "id": "w618664723",
+  "name": "Fajuyi Hall Car Park",
+  "lat": 7.518112,
+  "lng": 4.51862,
+  "tags": {
+   "amenity": "parking"
+  }
+ },
+ {
+  "id": "w618765175",
+  "name": "First Bank",
+  "lat": 7.515283,
+  "lng": 4.523431,
+  "tags": {
+   "amenity": "bank",
+   "building": "yes",
+   "opening_hours": "Mo-Fr 08:00-16:00"
+  }
+ },
+ {
+  "id": "r14909933",
+  "name": "First Bank Lecture Theare",
+  "lat": 7.521794,
+  "lng": 4.523898,
+  "tags": {
+   "building": "university"
+  }
+ },
+ {
+  "id": "w617712410",
+  "name": "Geology",
+  "lat": 7.520628,
+  "lng": 4.521223,
+  "tags": {
+   "building": "university"
+  }
+ },
+ {
+  "id": "w618765173",
+  "name": "Guarantee Trust Bank",
+  "lat": 7.514191,
+  "lng": 4.523257,
+  "tags": {
+   "amenity": "bank",
+   "building": "yes",
+   "opening_hours": "Mo-Fr 08:00-16:00"
+  }
+ },
+ {
+  "id": "w617712369",
+  "name": "Hezekiah Oluwasanmi Library",
+  "lat": 7.519842,
+  "lng": 4.523048,
+  "tags": {
+   "amenity": "library",
+   "building": "yes"
+  }
+ },
+ {
+  "id": "w618243403",
+  "name": "HSLTA",
+  "lat": 7.516823,
+  "lng": 4.525087,
+  "tags": {
+   "building": "university"
+  }
+ },
+ {
+  "id": "w618243404",
+  "name": "HSLTB",
+  "lat": 7.516718,
+  "lng": 4.524906,
+  "tags": {
+   "building": "university"
+  }
+ },
+ {
+  "id": "w618243405",
+  "name": "HSLTC",
+  "lat": 7.516525,
+  "lng": 4.525014,
+  "tags": {
+   "building": "university"
+  }
+ },
+ {
+  "id": "w617712402",
+  "name": "Humanities Car Park",
+  "lat": 7.519831,
+  "lng": 4.524686,
+  "tags": {
+   "amenity": "parking"
+  }
+ },
+ {
+  "id": "w1115590045",
+  "name": "Kufoniyi",
+  "lat": 7.50529,
+  "lng": 4.522509,
+  "tags": {
+   "building": "residential",
+   "building:levels": "1"
+  }
+ },
+ {
+  "id": "w619270909",
+  "name": "Main bowl",
+  "lat": 7.516204,
+  "lng": 4.521749,
+  "tags": {
+   "leisure": "pitch"
+  }
+ },
+ {
+  "id": "w615629105",
+  "name": "Mama Razaki's",
+  "lat": 7.521914,
+  "lng": 4.537023,
+  "tags": {
+   "building": "yes"
+  }
+ },
+ {
+  "id": "w619270923",
+  "name": "Moremi Car Park",
+  "lat": 7.52029,
+  "lng": 4.518356,
+  "tags": {
+   "amenity": "parking"
+  }
+ },
+ {
+  "id": "w619270924",
+  "name": "Moremi Hall",
+  "lat": 7.519648,
+  "lng": 4.518596,
+  "tags": {
+   "tourism": "hostel"
+  }
+ },
+ {
+  "id": "w617970630",
+  "name": "Mozambique Hall",
+  "lat": 7.522862,
+  "lng": 4.514133,
+  "tags": {
+   "tourism": "hostel"
+  }
+ },
+ {
+  "id": "w599038677",
+  "name": "Museum of Natural History",
+  "lat": 7.516569,
+  "lng": 4.528571,
+  "tags": {
+   "building": "yes",
+   "tourism": "museum",
+   "opening_hours": "Mo-Sa 08:00-16:00"
+  }
+ },
+ {
+  "id": "w1236664059",
+  "name": "New Admin. Block AFRIGIST",
+  "lat": 7.50505,
+  "lng": 4.525343,
+  "tags": {
+   "building": "university"
+  }
+ },
+ {
+  "id": "n6154104338",
+  "name": "New Buka",
+  "lat": 7.51691,
+  "lng": 4.51391,
+  "tags": {
+   "amenity": "restaurant"
+  }
+ },
+ {
+  "id": "w652826031",
+  "name": "New Faculty of Environmental Design and Management",
+  "lat": 7.515827,
+  "lng": 4.527308,
+  "tags": {
+   "building": "university"
+  }
+ },
+ {
+  "id": "w1236663825",
+  "name": "Njepuome Auditorium AFRIGIST, O.A.U Campus, Ile-Ife",
+  "lat": 7.505364,
+  "lng": 4.525016,
+  "tags": {
+   "building": "university"
+  }
+ },
+ {
+  "id": "w619971213",
+  "name": "OAU Health Centre",
+  "lat": 7.520267,
+  "lng": 4.516363,
+  "tags": {
+   "amenity": "hospital",
+   "healthcare": "hospital"
+  }
+ },
+ {
+  "id": "w618765171",
+  "name": "OAU Microfinance Bank",
+  "lat": 7.51462,
+  "lng": 4.52335,
+  "tags": {
+   "amenity": "bank",
+   "building": "yes",
+   "opening_hours": "Mo-Fr 08:00-16:00"
+  }
+ },
+ {
+  "id": "w625664968",
+  "name": "OAU Sports Centre",
+  "lat": 7.515249,
+  "lng": 4.520952,
+  "tags": {
+   "leisure": "sports_centre"
+  }
+ },
+ {
+  "id": "w598416515",
+  "name": "OAU Women's Group Day Care Centre",
+  "lat": 7.523612,
+  "lng": 4.535692,
+  "tags": {
+   "amenity": "childcare",
+   "building": "yes"
+  }
+ },
+ {
+  "id": "w1552256471",
+  "name": "Obafemi Awolowo University",
+  "lat": 7.527309,
+  "lng": 4.534069,
+  "tags": {
+   "amenity": "university",
+   "website": "https://www.oauife.edu.ng/"
+  }
+ },
+ {
+  "id": "w598416497",
+  "name": "Obafemi Awolowo University Staff School",
+  "lat": 7.523406,
+  "lng": 4.533961,
+  "tags": {
+   "amenity": "school"
+  }
+ },
+ {
+  "id": "w617712376",
+  "name": "Oduduwa Hall",
+  "lat": 7.518797,
+  "lng": 4.522027,
+  "tags": {
+   "building": "university"
+  }
+ },
+ {
+  "id": "w618049262",
+  "name": "Ogunbanjo Hall",
+  "lat": 7.526899,
+  "lng": 4.532495,
+  "tags": {
+   "amenity": "community_centre",
+   "building": "yes"
+  }
+ },
+ {
+  "id": "w599038674",
+  "name": "PG LT",
+  "lat": 7.516269,
+  "lng": 4.530039,
+  "tags": {
+   "building": "university"
+  }
+ },
+ {
+  "id": "w618765170",
+  "name": "Polaris Bank",
+  "lat": 7.514826,
+  "lng": 4.523364,
+  "tags": {
+   "amenity": "bank",
+   "building": "yes",
+   "opening_hours": "Mo-Fr 08:00-16:00"
+  }
+ },
+ {
+  "id": "w618642097",
+  "name": "Postgraduate College",
+  "lat": 7.516234,
+  "lng": 4.529996,
+  "tags": {
+   "amenity": "college"
+  }
+ },
+ {
+  "id": "w620256439",
+  "name": "Postgraduate Hall",
+  "lat": 7.522707,
+  "lng": 4.516471,
+  "tags": {
+   "tourism": "hostel"
+  }
+ },
+ {
+  "id": "w616403534",
+  "name": "Redeemed Christian Church of God",
+  "lat": 7.509476,
+  "lng": 4.516162,
+  "tags": {
+   "building": "church",
+   "building:levels": "2"
+  }
+ },
+ {
+  "id": "w617712378",
+  "name": "Senate Building",
+  "lat": 7.518612,
+  "lng": 4.524093,
+  "tags": {
+   "building": "university"
+  }
+ },
+ {
+  "id": "n14002480131",
+  "name": "Social Science Walkway",
+  "lat": 7.521315,
+  "lng": 4.523128,
+  "tags": {
+   "building": "university",
+   "building:levels": "2"
+  }
+ },
+ {
+  "id": "n14002366873",
+  "name": "Spectra",
+  "lat": 7.517254,
+  "lng": 4.527443,
+  "tags": {
+   "amenity": "restaurant",
+   "wheelchair": "yes",
+   "phone": "09069483275",
+   "cuisine": "pizza;burger;sandwich;chicken"
+  }
+ },
+ {
+  "id": "n14002380290",
+  "name": "Spectra",
+  "lat": 7.516532,
+  "lng": 4.525938,
+  "tags": {
+   "amenity": "restaurant",
+   "wheelchair": "yes"
+  }
+ },
+ {
+  "id": "n14002401606",
+  "name": "Spectra",
+  "lat": 7.516166,
+  "lng": 4.525892,
+  "tags": {
+   "amenity": "restaurant",
+   "wheelchair": "yes",
+   "cuisine": "fish;regional"
+  }
+ },
+ {
+  "id": "w616403550",
+  "name": "Squash Court",
+  "lat": 7.515407,
+  "lng": 4.520429,
+  "tags": {
+   "building": "yes",
+   "leisure": "sports_centre"
+  }
+ },
+ {
+  "id": "w616403563",
+  "name": "Student Union Building",
+  "lat": 7.517848,
+  "lng": 4.521369,
+  "tags": {
+   "building": "yes"
+  }
+ },
+ {
+  "id": "w617712420",
+  "name": "SUB Car Park",
+  "lat": 7.517875,
+  "lng": 4.520793,
+  "tags": {
+   "amenity": "parking"
+  }
+ },
+ {
+  "id": "w618765172",
+  "name": "UBA",
+  "lat": 7.514388,
+  "lng": 4.5233,
+  "tags": {
+   "amenity": "bank",
+   "building": "yes",
+   "opening_hours": "Mo-Fr 08:00-16:00"
+  }
+ },
+ {
+  "id": "w617712377",
+  "name": "University Senate Building",
+  "lat": 7.518653,
+  "lng": 4.523487,
+  "tags": {
+   "building": "university"
+  }
+ },
+ {
+  "id": "n14002385621",
+  "name": "Walkway",
+  "lat": 7.516129,
+  "lng": 4.525175,
+  "tags": {
+   "amenity": "fixme",
+   "wheelchair": "no"
+  }
+ },
+ {
+  "id": "w652826036",
+  "name": "Wema Bank",
+  "lat": 7.515551,
+  "lng": 4.523148,
+  "tags": {
+   "building": "yes"
+  }
+ },
+ {
+  "id": "n14002398478",
+  "name": "White Hands",
+  "lat": 7.516092,
+  "lng": 4.526893,
+  "tags": {
+   "amenity": "restaurant",
+   "wheelchair": "no",
+   "phone": "+234 703 123 0763",
+   "cuisine": "local"
+  }
+ },
+ {
+  "id": "w617712411",
+  "name": "White House",
+  "lat": 7.519892,
+  "lng": 4.520893,
+  "tags": {
+   "building": "university"
+  }
+ },
+ {
+  "id": "w618765174",
+  "name": "Zenith Bank",
+  "lat": 7.51403,
+  "lng": 4.523242,
+  "tags": {
+   "amenity": "bank",
+   "building": "yes",
+   "opening_hours": "Mo-Sa 08:00-16:00"
+  }
+ }
+]

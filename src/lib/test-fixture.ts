@@ -37,10 +37,13 @@ const path = (
   from: string,
   to: string,
   name: string,
-  attrs: Partial<Omit<CampusEdge, "id" | "from" | "to" | "name" | "geometry" | "length">> = {},
+  attrs: Partial<Omit<CampusEdge, "id" | "from" | "to" | "name" | "geometry" | "length" | "elevation">> = {},
 ): CampusEdge => {
   const a = byId.get(from)!;
   const b = byId.get(to)!;
+  const length = distance(a, b);
+  // Every slope in the fixture climbs from `from` to `to`.
+  const rise = (length * (attrs.slopePercent ?? 2)) / 100;
   return {
     id,
     from,
@@ -51,7 +54,8 @@ const path = (
       [a.lat, a.lng],
       [b.lat, b.lng],
     ],
-    length: distance(a, b),
+    length,
+    elevation: [100, 100 + rise],
     surface: "paved",
     slopePercent: 2,
     steps: 0,

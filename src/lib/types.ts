@@ -24,6 +24,8 @@ export type CampusEdge = {
   geometry: [number, number][];
   /** Metres. */
   length: number;
+  /** Terrain elevation in metres at each geometry point. */
+  elevation: number[];
   surface: Surface;
   /** Steepest gradient along the segment, in percent (8 ≈ 1:12 ramp limit). */
   slopePercent: number;
@@ -42,7 +44,13 @@ export type PlaceCategory =
   | "hall"
   | "health"
   | "student-life"
-  | "transport";
+  | "transport"
+  | "bank"
+  | "food"
+  | "worship"
+  | "parking"
+  | "sports"
+  | "other";
 
 /** null means the feature has not been surveyed yet. */
 export type PlaceAccessibility = {
@@ -59,6 +67,12 @@ export type PlaceInput = LatLng & {
   category: PlaceCategory;
   description: string;
   accessibility: PlaceAccessibility;
+  /** Departments, offices or facilities inside, from the survey. */
+  inside?: string[];
+  /** OpenStreetMap features this place is drawn from; the first supplies details. */
+  osmIds?: string[];
+  /** Selected OpenStreetMap tags: opening_hours, building:levels, wheelchair, phone… */
+  osmTags?: Record<string, string>;
 };
 
 export type Place = PlaceInput & {
