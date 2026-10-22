@@ -64,7 +64,8 @@ body {
   outline-offset: 2px;
 }
 
-:root[data-contrast="high"] .leaflet-container {
+/* Grey out only the base map, so the route and markers keep their colour. */
+:root[data-contrast="high"] .leaflet-tile-pane {
   filter: grayscale(1) contrast(1.4);
 }
 
