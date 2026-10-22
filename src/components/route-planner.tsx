@@ -117,7 +117,7 @@ export function RoutePlanner() {
         </p>
       )}
 
-      <main id="main" className="flex flex-1 flex-col lg:flex-row">
+      <main id="main" className="flex min-w-0 flex-1 flex-col lg:flex-row">
         <div className="flex w-full flex-col gap-6 overflow-y-auto border-border bg-surface p-4 lg:max-h-[calc(100vh-4.5rem)] lg:w-[26rem] lg:border-r">
           {reporting ? (
             <ReportForm
@@ -167,7 +167,7 @@ export function RoutePlanner() {
                 </fieldset>
 
                 <div className="flex items-end gap-2">
-                  <div className="flex flex-1 flex-col gap-3">
+                  <div className="flex min-w-0 flex-1 flex-col gap-3">
                     {(["from", "to"] as const).map((end) => (
                       <div key={end} className="flex flex-col gap-1">
                         <label htmlFor={`place-${end}`} className="text-sm font-semibold">
@@ -177,7 +177,7 @@ export function RoutePlanner() {
                           id={`place-${end}`}
                           value={end === "from" ? fromId : toId}
                           onChange={(e) => setPlace(e.target.value, end)}
-                          className="rounded-md border border-border bg-surface px-3 py-2"
+                          className="w-full min-w-0 rounded-md border border-border bg-surface px-3 py-2"
                         >
                           {places.map((place) => (
                             <option key={place.id} value={place.id}>
@@ -297,7 +297,7 @@ export function RoutePlanner() {
           )}
         </div>
 
-        <div className="relative h-[60vh] flex-1 lg:h-auto">
+        <div className="relative h-[70vh] shrink-0 lg:h-auto lg:flex-1">
           <CampusMap
             routeEdgeIds={route?.edgeIds ?? []}
             fromPlaceId={fromId}

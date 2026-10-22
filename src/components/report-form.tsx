@@ -120,7 +120,7 @@ export function ReportForm({ picked, picking, onTogglePicking, onEdgeChange, onS
               setNearPlaceId(e.target.value);
               onEdgeChange(e.target.value ? pathNear(e.target.value) : undefined);
             }}
-            className="rounded-md border border-border bg-surface px-3 py-2"
+            className="w-full min-w-0 rounded-md border border-border bg-surface px-3 py-2"
           >
             <option value="">{picked ? "Picked on the map" : "Choose a building…"}</option>
             {places.map((place) => (
@@ -152,7 +152,7 @@ export function ReportForm({ picked, picking, onTogglePicking, onEdgeChange, onS
             id="report-place"
             value={placeId}
             onChange={(e) => setPlaceId(e.target.value)}
-            className="rounded-md border border-border bg-surface px-3 py-2"
+            className="w-full min-w-0 rounded-md border border-border bg-surface px-3 py-2"
           >
             <option value="">Choose a building…</option>
             {places.map((place) => (
@@ -172,7 +172,7 @@ export function ReportForm({ picked, picking, onTogglePicking, onEdgeChange, onS
           id="report-type"
           value={type}
           onChange={(e) => setType(e.target.value as ReportType)}
-          className="rounded-md border border-border bg-surface px-3 py-2"
+          className="w-full min-w-0 rounded-md border border-border bg-surface px-3 py-2"
         >
           {Object.entries(REPORT_TYPES).map(([value, label]) => (
             <option key={value} value={value}>
