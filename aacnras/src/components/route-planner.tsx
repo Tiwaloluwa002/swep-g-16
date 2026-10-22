@@ -80,7 +80,7 @@ export function RoutePlanner() {
   const detailsPlace = campus.places.get(detailsId ?? toId)!;
 
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="flex min-h-screen flex-col lg:h-screen">
       <header className="border-b border-border bg-surface">
         <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3">
           <div>
@@ -115,8 +115,8 @@ export function RoutePlanner() {
         </p>
       )}
 
-      <main id="main" className="flex min-w-0 flex-1 flex-col lg:flex-row">
-        <div className="flex w-full flex-col gap-6 overflow-y-auto border-border bg-surface p-4 lg:max-h-[calc(100vh-4.5rem)] lg:w-[26rem] lg:border-r">
+      <main id="main" className="flex min-w-0 flex-1 flex-col lg:min-h-0 lg:flex-row">
+        <div className="relative flex w-full flex-col gap-6 overflow-y-auto border-border bg-surface p-4 lg:w-[26rem] lg:border-r">
           {reporting ? (
             <ReportForm
               picked={picked}
