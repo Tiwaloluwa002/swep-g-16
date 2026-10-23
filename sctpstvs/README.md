@@ -29,7 +29,8 @@ Working now:
 - JSON API for sign-in, wallet and demo top-up, routes, buying tickets, verification (rate-limited, logs fraud), and admin stats, tickets, refunds, fraud log, routes and fares, wallet credits and vehicles.
 - Sign-in page, and the student screen: wallet balance and history, labelled demo top-up, route list with demo fares, buying a ticket, and active, used and expired tickets with a full-screen QR code and backup code.
 - Conductor screen: pick the vehicle, scan the QR with the phone camera (`@zxing/browser`, loaded in the browser only) or type the backup code, and see a full-screen VALID / ALREADY USED / EXPIRED / WRONG ROUTE / INVALID result with a vibration cue.
+- Admin dashboard: sales and redemption totals with a per-route table, a filterable ticket list with refunds, the fraud log, route and fare management, wallet credits, and vehicle-to-route assignment.
 
 ## Status
 
-Still to come: the admin dashboard, and the full README.
+Still to come: UI polish and the full README (security design, API reference, limitations).
