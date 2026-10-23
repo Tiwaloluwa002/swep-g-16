@@ -30,8 +30,9 @@ npm test           # unit tests
 - Handover confirmation by the holding desk (or the finder for items they hold), single-use even under concurrent requests.
 - Desk queries: items at a desk, codes awaiting collection, failed-claim log and simple stats.
 - JSON API for sign-in, reports, candidates, claims, verification (with a QR image of the handover code), handover confirmation and the desk dashboard. Every response passes the leak guard; mutating requests must be JSON (CSRF protection).
+- Mobile-first, accessible UI: home page with a public board of found items, sign-in, member dashboard with notifications, lost and found report forms with live warnings about identifying text, ranked candidates with score bars, claim page with QR handover code, finder page and desk/admin dashboard with QR scanning where the browser supports it.
 - Verification answers stored only as normalised, salted scrypt hashes; attempt limits of 3 per claim and 5 per user per day.
 
 ## Status
 
-Work in progress. The server-side logic (data, reports, matching, claims, handover, desk queries) is done and unit-tested. The API is done and smoke-tested with curl. Still to come: the user interface.
+Work in progress. The server-side logic (data, reports, matching, claims, handover, desk queries) is done and unit-tested. The app works end to end (API smoke-tested with curl, UI checked in headless Chrome at phone and desktop width). Still to come: the full README.
