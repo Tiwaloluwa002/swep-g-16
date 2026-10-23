@@ -28,7 +28,8 @@ Working now:
 - Password hashing with scrypt, database-backed sessions and an in-memory rate limiter.
 - JSON API for sign-in, wallet and demo top-up, routes, buying tickets, verification (rate-limited, logs fraud), and admin stats, tickets, refunds, fraud log, routes and fares, wallet credits and vehicles.
 - Sign-in page, and the student screen: wallet balance and history, labelled demo top-up, route list with demo fares, buying a ticket, and active, used and expired tickets with a full-screen QR code and backup code.
+- Conductor screen: pick the vehicle, scan the QR with the phone camera (`@zxing/browser`, loaded in the browser only) or type the backup code, and see a full-screen VALID / ALREADY USED / EXPIRED / WRONG ROUTE / INVALID result with a vibration cue.
 
 ## Status
 
-Still to come: the conductor scanner, the admin dashboard, and the full README.
+Still to come: the admin dashboard, and the full README.
