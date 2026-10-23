@@ -29,8 +29,9 @@ npm test           # unit tests
 - Claims: the owner answers the finder's questions; on success the server issues a one-time handover code that expires after 72 hours and can be reissued (the old code stops working).
 - Handover confirmation by the holding desk (or the finder for items they hold), single-use even under concurrent requests.
 - Desk queries: items at a desk, codes awaiting collection, failed-claim log and simple stats.
+- JSON API for sign-in, reports, candidates, claims, verification (with a QR image of the handover code), handover confirmation and the desk dashboard. Every response passes the leak guard; mutating requests must be JSON (CSRF protection).
 - Verification answers stored only as normalised, salted scrypt hashes; attempt limits of 3 per claim and 5 per user per day.
 
 ## Status
 
-Work in progress. The server-side logic (data, reports, matching, claims, handover, desk queries) is done and unit-tested. Still to come: API routes, QR codes and the user interface.
+Work in progress. The server-side logic (data, reports, matching, claims, handover, desk queries) is done and unit-tested. The API is done and smoke-tested with curl. Still to come: the user interface.
