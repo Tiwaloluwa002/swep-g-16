@@ -1,36 +1,26 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# PPCLFMVRS: Privacy-Preserving Campus Lost-and-Found Matching and Verified Recovery System
 
-## Getting Started
+A SWEP Group 15 project at Obafemi Awolowo University (OAU), Ile-Ife.
 
-First, run the development server:
+When students lose phones, ID cards, wallets, keys, laptops or bags on campus, finders usually post photos and full details in WhatsApp groups. That exposes the owner's private information and lets anyone falsely claim the item. This system matches lost and found reports automatically. It hands an item over only after the claimant proves ownership, and neither side's private details leak.
+
+## How to run
+
+Requires Node.js 22.5 or later (the app uses the built-in `node:sqlite`).
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+cd ppclfmvrs
+npm install
+npm run dev        # http://localhost:3000
+npm test           # unit tests
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Features
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- Pick-lists of OAU item categories, colours and campus locations. Locations have OpenStreetMap coordinates, so "nearby" is worked out from real distances.
+- Matching engine: scores lost↔found pairs on category, colour, location, date and description keywords.
+- Detection of phone numbers, emails, matric numbers and long serial-like numbers in public text.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Status
 
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Work in progress. Still to come: accounts and sessions, lost and found reports, claims with verification questions, one-time handover codes, the desk dashboard and the user interface.
