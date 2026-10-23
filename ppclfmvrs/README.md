@@ -26,8 +26,11 @@ npm test           # unit tests
 - Matching on every new report, with in-app notifications to both sides, and a ranked candidate list per lost report.
 - Allowlist serializers for every response, plus a guard that throws if a private field, hash or contact detail would be sent.
 - Demo seed data with lost and found items that match.
+- Claims: the owner answers the finder's questions; on success the server issues a one-time handover code that expires after 72 hours and can be reissued (the old code stops working).
+- Handover confirmation by the holding desk (or the finder for items they hold), single-use even under concurrent requests.
+- Desk queries: items at a desk, codes awaiting collection, failed-claim log and simple stats.
 - Verification answers stored only as normalised, salted scrypt hashes; attempt limits of 3 per claim and 5 per user per day.
 
 ## Status
 
-Work in progress. Data layer, reports and matching done. Still to come: claims with verification questions, one-time handover codes, the desk dashboard and the user interface.
+Work in progress. The server-side logic (data, reports, matching, claims, handover, desk queries) is done and unit-tested. Still to come: API routes, QR codes and the user interface.
