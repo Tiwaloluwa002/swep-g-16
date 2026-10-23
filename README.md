@@ -6,7 +6,7 @@ This repository holds SWEP Group 15's three campus projects for Obafemi Awolowo 
 | --- | --- | --- | --- |
 | [`aacnras/`](aacnras/README.md) | **Accessibility-Aware Campus Navigation and Route Advisory System** | Plans routes across campus for how each person moves (walking, wheelchair, visually impaired, limited mobility), with warnings, an elevation profile, building accessibility details and verified obstacle reports | MVP done |
 | [`sctpstvs/`](sctpstvs/README.md) | **Secure Campus Transport Payment and Single-Use Ticket Verification System** | Students pay for campus shuttle rides from a wallet and get signed, single-use QR tickets that conductors scan, so fake or reused tickets are rejected | MVP done |
-| [`ppclfmvrs/`](ppclfmvrs/README.md) | **Privacy-Preserving Campus Lost-and-Found Matching and Verified Recovery System** | Matches lost and found reports automatically, and hands items over only after the owner proves ownership, without exposing either side's private details | MVP in progress |
+| [`ppclfmvrs/`](ppclfmvrs/README.md) | **Privacy-Preserving Campus Lost-and-Found Matching and Verified Recovery System** | Matches lost and found reports automatically, and hands items over only after the owner proves ownership, without exposing either side's private details | MVP done |
 
 ![AACNRAS route planner](docs/screenshots/route-planner.png)
 
