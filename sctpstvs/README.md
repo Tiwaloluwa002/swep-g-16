@@ -27,7 +27,8 @@ Working now:
 - Ed25519-signed ticket tokens, backup codes, purchase from the wallet, single-use redemption, expiry and refunds (server code with unit tests).
 - Password hashing with scrypt, database-backed sessions and an in-memory rate limiter.
 - JSON API for sign-in, wallet and demo top-up, routes, buying tickets, verification (rate-limited, logs fraud), and admin stats, tickets, refunds, fraud log, routes and fares, wallet credits and vehicles.
+- Sign-in page, and the student screen: wallet balance and history, labelled demo top-up, route list with demo fares, buying a ticket, and active, used and expired tickets with a full-screen QR code and backup code.
 
 ## Status
 
-Still to come: the student wallet and ticket screens, the conductor scanner, the admin dashboard, and the full README.
+Still to come: the conductor scanner, the admin dashboard, and the full README.
