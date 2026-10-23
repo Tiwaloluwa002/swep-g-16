@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
-import { Alert, Badge, Button, Card, Loading, NeedsSignIn, PageShell } from "@/components/ui";
+import { Alert, Badge, Button, Card, NeedsSignIn, PageLoading, PageShell } from "@/components/ui";
 import { api, useApi } from "@/lib/api";
 import { formatDate, itemTitle, LOST_STATUS } from "@/lib/format";
 import { WEIGHTS } from "@/lib/matching";
@@ -44,7 +44,7 @@ export function LostDetail() {
       </PageShell>
     );
   }
-  if (!data) return <Loading />;
+  if (!data) return <PageLoading />;
   const { item, candidates } = data;
   const details = Object.entries({
     "Serial/IMEI last digits": item.privateDetails.serialLastDigits,

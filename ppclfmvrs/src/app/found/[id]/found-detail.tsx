@@ -3,7 +3,7 @@
 import { useParams } from "next/navigation";
 import { useState } from "react";
 import { CodeEntry } from "@/components/code-entry";
-import { Alert, Badge, Button, Card, Loading, NeedsSignIn, PageShell } from "@/components/ui";
+import { Alert, Badge, Button, Card, NeedsSignIn, PageLoading, PageShell } from "@/components/ui";
 import { api, useApi } from "@/lib/api";
 import { formatDate, FOUND_STATUS, itemTitle } from "@/lib/format";
 import type { OwnFound } from "@/lib/public-types";
@@ -20,7 +20,7 @@ export function FoundDetail() {
       </PageShell>
     );
   }
-  if (!item) return <Loading />;
+  if (!item) return <PageLoading />;
 
   async function close() {
     if (!window.confirm("Close this report? Owners will no longer be able to claim it.")) return;

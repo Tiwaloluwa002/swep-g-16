@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { useParams } from "next/navigation";
 import { type FormEvent, useState } from "react";
-import { Alert, Badge, Button, Card, Field, inputClass, Loading, NeedsSignIn, PageShell } from "@/components/ui";
+import { Alert, Badge, Button, Card, Field, inputClass, NeedsSignIn, PageLoading, PageShell } from "@/components/ui";
 import { api, useApi } from "@/lib/api";
 import { CLAIM_STATUS, formatDate, formatDateTime, itemTitle } from "@/lib/format";
 import type { ClaimView } from "@/lib/public-types";
@@ -26,7 +26,7 @@ export function ClaimDetail() {
       </PageShell>
     );
   }
-  if (!data) return <Loading />;
+  if (!data) return <PageLoading />;
   const claim = data;
 
   async function submit(e: FormEvent) {

@@ -87,6 +87,15 @@ export function Loading() {
   );
 }
 
+/** Suspense fallback for whole pages, padded like PageShell. */
+export function PageLoading() {
+  return (
+    <main id="main" className="mx-auto w-full max-w-3xl px-4 py-6">
+      <Loading />
+    </main>
+  );
+}
+
 /** Shown when an API call says the user is not signed in or not allowed. */
 export function NeedsSignIn({ status, message }: { status: number; message: string }) {
   if (status === 401) {

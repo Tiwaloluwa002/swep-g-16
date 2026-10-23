@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { CodeEntry } from "@/components/code-entry";
-import { Alert, Badge, Button, Card, Field, inputClass, Loading, NeedsSignIn, PageShell } from "@/components/ui";
+import { Alert, Badge, Button, Card, Field, inputClass, NeedsSignIn, PageLoading, PageShell } from "@/components/ui";
 import { api, useApi } from "@/lib/api";
 import { formatDate, formatDateTime, FOUND_STATUS, itemTitle } from "@/lib/format";
 import type { DeskItem, FailedAttempt, SessionUser, Stats } from "@/lib/public-types";
@@ -31,7 +31,7 @@ export function DeskDashboard() {
       </PageShell>
     );
   }
-  if (!data) return <Loading />;
+  if (!data) return <PageLoading />;
   const user = me.data?.user;
   const isAdmin = user?.role === "admin";
   const awaiting = data.items.filter((i) => i.status === "pending_handover");
