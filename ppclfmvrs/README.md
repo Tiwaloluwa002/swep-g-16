@@ -22,8 +22,12 @@ npm test           # unit tests
 - Detection of phone numbers, emails, matric numbers and long serial-like numbers in public text.
 - SQLite storage through Node's built-in `node:sqlite` (file in `data/`, ignored by git).
 - Accounts keyed by matriculation or staff number, with scrypt-salted password hashes and hashed session tokens.
+- Lost reports (with private identifying details kept server-side) and found reports (generic public description, 2–3 verification questions, desk or finder custody).
+- Matching on every new report, with in-app notifications to both sides, and a ranked candidate list per lost report.
+- Allowlist serializers for every response, plus a guard that throws if a private field, hash or contact detail would be sent.
+- Demo seed data with lost and found items that match.
 - Verification answers stored only as normalised, salted scrypt hashes; attempt limits of 3 per claim and 5 per user per day.
 
 ## Status
 
-Work in progress. Data layer done. Still to come: lost and found reports, claims with verification questions, one-time handover codes, the desk dashboard and the user interface.
+Work in progress. Data layer, reports and matching done. Still to come: claims with verification questions, one-time handover codes, the desk dashboard and the user interface.
