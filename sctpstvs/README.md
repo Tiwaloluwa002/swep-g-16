@@ -1,36 +1,32 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# SCTPSTVS · Secure Campus Transport Payment and Single-Use Ticket Verification System
 
-## Getting Started
+A SWEP Group 15 project at Obafemi Awolowo University (OAU), Ile-Ife.
 
-First, run the development server:
+Students pay for campus shuttle rides from a wallet and get a ticket with a signed QR code. Conductors scan it on the bus. Each ticket works once, until it expires, so fake, edited or reused tickets are caught.
+
+> **Demo only.** No real money moves. Top-ups are a labelled demo flow, and the route fares are made-up demo values, not OAU's real fares.
+
+## How to run
+
+You need Node.js 22.13 or later (the app uses the built-in `node:sqlite` module).
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+cd sctpstvs
+npm install
+npm run dev        # http://localhost:3000
+npm test           # unit tests
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+On first run the app creates `data/` with the SQLite database and the ticket signing key. Both are git-ignored. Delete `data/` to start again from the demo data.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Features
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Working now:
 
-## Learn More
+- SQLite data layer (`node:sqlite`) with users, sessions, routes, vehicles, tickets, an append-only wallet ledger and a fraud log.
+- Ed25519-signed ticket tokens, backup codes, purchase from the wallet, single-use redemption, expiry and refunds (server code with unit tests).
+- Password hashing with scrypt, database-backed sessions and an in-memory rate limiter.
 
-To learn more about Next.js, take a look at the following resources:
+## Status
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Still to come: API routes, student wallet and ticket screens, the conductor scanner, the admin dashboard, and the full README.
