@@ -20,7 +20,10 @@ npm test           # unit tests
 - Pick-lists of OAU item categories, colours and campus locations. Locations have OpenStreetMap coordinates, so "nearby" is worked out from real distances.
 - Matching engine: scores lost↔found pairs on category, colour, location, date and description keywords.
 - Detection of phone numbers, emails, matric numbers and long serial-like numbers in public text.
+- SQLite storage through Node's built-in `node:sqlite` (file in `data/`, ignored by git).
+- Accounts keyed by matriculation or staff number, with scrypt-salted password hashes and hashed session tokens.
+- Verification answers stored only as normalised, salted scrypt hashes; attempt limits of 3 per claim and 5 per user per day.
 
 ## Status
 
-Work in progress. Still to come: accounts and sessions, lost and found reports, claims with verification questions, one-time handover codes, the desk dashboard and the user interface.
+Work in progress. Data layer done. Still to come: lost and found reports, claims with verification questions, one-time handover codes, the desk dashboard and the user interface.
