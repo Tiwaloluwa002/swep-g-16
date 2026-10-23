@@ -92,7 +92,7 @@ export function WalletCard({
             Add demo credit
           </button>
         </form>
-        <p role="status" className="min-h-5 text-sm">
+        <p role="status" className="text-sm empty:hidden">
           {message}
         </p>
       </div>

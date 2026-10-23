@@ -80,7 +80,7 @@ export function BuyTicket({
         >
           {route ? `Pay ${formatNaira(route.fareKobo)} from wallet` : "Choose a route"}
         </button>
-        <p role="alert" className="min-h-5 text-sm text-danger">
+        <p role="alert" className="text-sm text-danger empty:hidden">
           {message}
         </p>
       </form>

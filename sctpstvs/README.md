@@ -30,7 +30,8 @@ Working now:
 - Sign-in page, and the student screen: wallet balance and history, labelled demo top-up, route list with demo fares, buying a ticket, and active, used and expired tickets with a full-screen QR code and backup code.
 - Conductor screen: pick the vehicle, scan the QR with the phone camera (`@zxing/browser`, loaded in the browser only) or type the backup code, and see a full-screen VALID / ALREADY USED / EXPIRED / WRONG ROUTE / INVALID result with a vibration cue.
 - Admin dashboard: sales and redemption totals with a per-route table, a filterable ticket list with refunds, the fraud log, route and fare management, wallet credits, and vehicle-to-route assignment.
+- Mobile-first, accessible UI in light and dark themes: semantic headings and labels, visible focus, keyboard-operable tabs, and live regions for results.
 
 ## Status
 
-Still to come: UI polish and the full README (security design, API reference, limitations).
+Still to come: the full README (security design, API reference, limitations).
