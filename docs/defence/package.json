@@ -1,0 +1,13 @@
+{
+  "name": "aacnras-defence-docs",
+  "private": true,
+  "description": "Generates the AACNRAS SWEP defence report (.docx) and slides (.pptx)",
+  "scripts": {
+    "report": "node build-report.js",
+    "slides": "NODE_PATH=./node_modules node build-deck.js"
+  },
+  "dependencies": {
+    "docx": "^9.14.0",
+    "pptxgenjs": "^4.0.1"
+  }
+}
