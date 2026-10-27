@@ -356,15 +356,11 @@ Checks the `x-admin-passcode` header. Responses: `200` `{ "ok": true }` or `401`
 
 | Variable | Default | Purpose |
 | --- | --- | --- |
-| `ADMIN_PASSCODE` | `oau-swep-15` | Passcode for the admin dashboard and status updates |
+| `DATABASE_URL` | none: uses PGlite in `data/pglite/` | Postgres connection string. In production, use Supabase's **Transaction pooler** URL (port 6543). |
+| `DATABASE_SCHEMA` | `aacnras` | Schema for this app's tables. The group's apps share one database, each in its own schema. |
+| `ADMIN_PASSCODE` | `oau-swep-15`, outside production only | Passcode for the admin dashboard and report status updates. **Required in production**: the admin API refuses to run without it. |
 
-Set it in `aacnras/.env.local`, which git ignores:
-
-```bash
-ADMIN_PASSCODE=choose-something-long
-```
-
-**Change the default before anyone else can reach the app.** The passcode is compared in constant time, but it is a shared secret, not a user account system.
+For local overrides, copy [`.env.example`](.env.example) to `.env.local`, which git ignores. The passcode is compared in constant time, but it is a shared secret, not a user account system.
 
 ## Testing
 
@@ -373,11 +369,12 @@ cd aacnras
 npm test
 ```
 
-There are 25 tests in three areas:
+There are 29 tests in four areas:
 
 - **Routing** (`routing.test.ts`): wheelchair routes never use steps or slopes over 8%; blocked segments are avoided, and a blocked only-way-in gives no route; after-dark mode avoids unlit paths; verified reports block paths while pending ones only warn; turn directions; rest points; destination advisories. These tests run on a **small hand-made test campus** (`test-fixture.ts`) with known stairs, hills and unlit paths, so the expected answers are clear. Further tests check the **real OAU data**: every pair of the 79 places is connected, and every profile can travel between the main faculties.
 - **Route details** (`route-details.test.ts`): the elevation profile, climb and descent in both directions, step and surface totals, the steepest section and landmarks.
 - **Places** (`places.test.ts`): grouping, nearby places, opening-hours formatting, OpenStreetMap links and unique IDs.
+- **Report store** (`report-store.test.ts`): saving, listing and updating obstacle reports in Postgres. These tests run on an in-memory PGlite database, so they need no server.
 
 Before committing, also run `npm run lint` and `npx tsc --noEmit`.
 
@@ -390,7 +387,15 @@ npm run build
 npm start          # add -p <port> -H 0.0.0.0 as needed
 ```
 
-**Obstacle reports are stored in `aacnras/data/reports.json`.** That works on a single server, such as a laptop for the demo or a VPS. It does **not** work on serverless hosts like Vercel, where the file system is temporary and reports would be lost. Before deploying there, move report storage to a database (Supabase, Postgres or similar). The only file to change is `src/lib/server/report-store.ts`.
+**Obstacle reports are stored in Postgres**, so the app runs on serverless hosts like Vercel as well as on a single server. On first start it creates the `aacnras` schema and its `reports` table by itself.
+
+To deploy with Supabase:
+
+1. In Supabase, open **Project Settings → Database → Connection string** and copy the **Transaction pooler** URI (port 6543). Put your database password into it.
+2. On your host (for example Vercel → Project → Settings → Environment Variables), set `DATABASE_URL` to that URI and set `ADMIN_PASSCODE`.
+3. Deploy. With Vercel, set the project's **Root Directory** to `aacnras`.
+
+The other group apps can use the same Supabase database; each keeps its tables in its own schema.
 
 ## Limitations and future work
 

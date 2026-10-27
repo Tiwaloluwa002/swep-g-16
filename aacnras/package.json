@@ -11,8 +11,10 @@
     "import:osm": "node scripts/import-osm.mjs"
   },
   "dependencies": {
+    "@electric-sql/pglite": "^0.5.12",
     "leaflet": "^1.9.4",
     "next": "16.4.2",
+    "postgres": "^3.4.9",
     "react": "19.3.0",
     "react-dom": "19.3.0",
     "react-leaflet": "^5.0.0"
