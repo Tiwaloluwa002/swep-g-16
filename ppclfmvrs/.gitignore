@@ -42,3 +42,6 @@ next-env.d.ts
 
 # runtime database (users, reports, hashed answers)
 /data/
+
+# example env file (placeholders only)
+!.env.example
