@@ -1,6 +1,7 @@
 import { type Db, one } from "./db";
 import { createFound, createLost } from "./items";
 import { matchNewFound } from "./matches";
+import type { User } from "@/lib/types";
 import { createUser } from "./users";
 
 /** Demo accounts, documented in the README. Contact details are fake and exist to prove they never leak. */
@@ -19,15 +20,25 @@ function dateDaysAgo(now: Date, days: number): string {
 }
 
 /** Fills an empty database with demo users and reports that match each other. */
-export function seedIfEmpty(db: Db, now = new Date()): void {
-  if (one(db, "SELECT 1 FROM users LIMIT 1")) return;
-  const users = Object.fromEntries(DEMO_USERS.map((u) => [u.ident, createUser(db, u, now)]));
+export async function seedIfEmpty(db: Db, now = new Date()): Promise<void> {
+  if (await one(db, "SELECT 1 FROM {schema}.users LIMIT 1")) return;
+  await db.transaction(async (tx) => {
+    // Two instances starting at once: the second waits here, then sees the users and stops.
+    await tx.query("SELECT pg_advisory_xact_lock(hashtext($1))", [`${tx.schema}:seed`]);
+    if (await one(tx, "SELECT 1 FROM {schema}.users LIMIT 1")) return;
+    await seed(tx, now);
+  });
+}
+
+async function seed(db: Db, now: Date): Promise<void> {
+  const users: Record<string, User> = {};
+  for (const u of DEMO_USERS) users[u.ident] = await createUser(db, u, now);
   const tolu = users["CSC/2021/045"];
   const chinedu = users["EEG/2020/118"];
   const halima = users["ECN/2022/077"];
   const securityOfficer = users["SEC/0042"];
 
-  createLost(db, tolu.id, {
+  await createLost(db, tolu.id, {
     category: "phone",
     colour: "black",
     brand: "Tecno",
@@ -43,7 +54,7 @@ export function seedIfEmpty(db: Db, now = new Date()): void {
     },
   }, now);
 
-  createLost(db, halima.id, {
+  await createLost(db, halima.id, {
     category: "wallet",
     colour: "brown",
     brand: "",
@@ -55,7 +66,7 @@ export function seedIfEmpty(db: Db, now = new Date()): void {
     privateDetails: { contents: "GTBank debit card, ₦2,000 cash and a small brass key" },
   }, now);
 
-  createLost(db, tolu.id, {
+  await createLost(db, tolu.id, {
     category: "keys",
     colour: "silver",
     brand: "",
@@ -68,7 +79,7 @@ export function seedIfEmpty(db: Db, now = new Date()): void {
   }, now);
 
   const found = [
-    createFound(db, chinedu.id, {
+    await createFound(db, chinedu.id, {
       category: "phone",
       colour: "black",
       locationId: "library",
@@ -82,7 +93,7 @@ export function seedIfEmpty(db: Db, now = new Date()): void {
         { question: "What picture is on the lock screen?", answer: "Cat" },
       ],
     }, now),
-    createFound(db, chinedu.id, {
+    await createFound(db, chinedu.id, {
       category: "wallet",
       colour: "brown",
       locationId: "sub",
@@ -97,7 +108,7 @@ export function seedIfEmpty(db: Db, now = new Date()): void {
         { question: "Roughly how much cash is inside, in naira?", answer: "2000" },
       ],
     }, now),
-    createFound(db, halima.id, {
+    await createFound(db, halima.id, {
       category: "phone",
       colour: "white",
       locationId: "moremi",
@@ -111,7 +122,7 @@ export function seedIfEmpty(db: Db, now = new Date()): void {
         { question: "What app is on the home screen dock?", answer: "WhatsApp" },
       ],
     }, now),
-    createFound(db, securityOfficer.id, {
+    await createFound(db, securityOfficer.id, {
       category: "id-card",
       colour: "blue",
       locationId: "tech",
@@ -126,5 +137,5 @@ export function seedIfEmpty(db: Db, now = new Date()): void {
       ],
     }, now),
   ];
-  for (const f of found) matchNewFound(db, f, now);
+  for (const f of found) await matchNewFound(db, f, now);
 }

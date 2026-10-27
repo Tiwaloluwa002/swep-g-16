@@ -7,8 +7,10 @@ export async function GET() {
   await connection();
   return handle(async () => {
     const user = await requireUser();
-    const db = getDb();
-    return json(listClaimsByUser(db, user.id).map((c) => claimView(db, c)));
+    const db = await getDb();
+    const views = [];
+    for (const claim of await listClaimsByUser(db, user.id)) views.push(await claimView(db, claim));
+    return json(views);
   });
 }
 
@@ -18,7 +20,7 @@ export async function POST(request: Request) {
     const user = await requireUser();
     const body = (await readJson(request)) as { lostId?: unknown; foundId?: unknown } | null;
     if (typeof body?.lostId !== "string" || typeof body?.foundId !== "string") throw new HttpError(400, "Choose an item to claim.");
-    const db = getDb();
-    return json(claimView(db, startClaim(db, user, body.lostId, body.foundId)), 201);
+    const db = await getDb();
+    return json(await claimView(db, await startClaim(db, user, body.lostId, body.foundId)), 201);
   });
 }

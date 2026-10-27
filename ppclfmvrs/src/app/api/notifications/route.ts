@@ -7,7 +7,7 @@ export async function GET() {
   await connection();
   return handle(async () => {
     const user = await requireUser();
-    return json(listNotifications(getDb(), user.id));
+    return json(await listNotifications(await getDb(), user.id));
   });
 }
 
@@ -16,7 +16,7 @@ export async function POST(request: Request) {
   return handle(async () => {
     await readJson(request);
     const user = await requireUser();
-    markAllRead(getDb(), user.id);
+    await markAllRead(await getDb(), user.id);
     return json({ ok: true });
   });
 }

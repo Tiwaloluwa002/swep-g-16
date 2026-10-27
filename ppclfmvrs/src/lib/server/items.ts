@@ -3,7 +3,7 @@ import { getDesk, getLocation, isCategory, isColour } from "@/lib/catalog";
 import { findSensitiveText, SENSITIVE_MESSAGES } from "@/lib/text";
 import type { Category, Custody, FoundItem, FoundStatus, LostItem, LostStatus, PrivateDetails } from "@/lib/types";
 import { hashAnswer, newSalt } from "./crypto";
-import { all, type Db, one, type Row, run, transaction } from "./db";
+import { all, type Db, iso, isoOrNull, one, type Row, run } from "./db";
 
 export function toLost(row: Row): LostItem {
   return {
@@ -19,8 +19,8 @@ export function toLost(row: Row): LostItem {
     timeTo: String(row.time_to),
     privateDetails: JSON.parse(String(row.private_json)) as PrivateDetails,
     status: row.status as LostStatus,
-    createdAt: String(row.created_at),
-    updatedAt: String(row.updated_at),
+    createdAt: iso(row.created_at),
+    updatedAt: iso(row.updated_at),
   };
 }
 
@@ -36,10 +36,10 @@ export function toFound(row: Row): FoundItem {
     custody: row.custody as Custody,
     deskId: (row.desk_id as string | null) ?? null,
     meetLocationId: (row.meet_location_id as string | null) ?? null,
-    receivedAt: (row.received_at as string | null) ?? null,
+    receivedAt: isoOrNull(row.received_at),
     status: row.status as FoundStatus,
-    createdAt: String(row.created_at),
-    updatedAt: String(row.updated_at),
+    createdAt: iso(row.created_at),
+    updatedAt: iso(row.updated_at),
   };
 }
 
@@ -163,14 +163,14 @@ export function parseNewFound(input: unknown, now = new Date()): NewFound | stri
 
 // ---------- Persistence ----------
 
-export function createLost(db: Db, ownerId: string, input: NewLost, now = new Date()): LostItem {
+export async function createLost(db: Db, ownerId: string, input: NewLost, now = new Date()): Promise<LostItem> {
   const id = randomUUID();
   const ts = now.toISOString();
-  run(
+  await run(
     db,
-    `INSERT INTO lost_items (id, owner_id, category, colour, brand, description, location_id, lost_date,
+    `INSERT INTO {schema}.lost_items (id, owner_id, category, colour, brand, description, location_id, lost_date,
        time_from, time_to, private_json, status, created_at, updated_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'open', ?, ?)`,
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, 'open', $12, $12)`,
     id,
     ownerId,
     input.category,
@@ -183,20 +183,24 @@ export function createLost(db: Db, ownerId: string, input: NewLost, now = new Da
     input.timeTo,
     JSON.stringify(input.privateDetails),
     ts,
-    ts,
   );
-  return getLost(db, id)!;
+  return (await getLost(db, id))!;
 }
 
-export function createFound(db: Db, finderId: string, input: NewFound, now = new Date()): FoundItem {
+export async function createFound(db: Db, finderId: string, input: NewFound, now = new Date()): Promise<FoundItem> {
   const id = randomUUID();
   const ts = now.toISOString();
-  transaction(db, () => {
-    run(
-      db,
-      `INSERT INTO found_items (id, finder_id, category, colour, location_id, found_date, description, custody,
+  // Hash before opening the transaction: scrypt is slow and needs no database.
+  const questions = input.questions.map((q, position) => {
+    const salt = newSalt();
+    return { id: randomUUID(), position, question: q.question, salt, hash: hashAnswer(q.answer, salt) };
+  });
+  await db.transaction(async (tx) => {
+    await run(
+      tx,
+      `INSERT INTO {schema}.found_items (id, finder_id, category, colour, location_id, found_date, description, custody,
          desk_id, meet_location_id, received_at, status, created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, 'open', ?, ?)`,
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NULL, 'open', $11, $11)`,
       id,
       finderId,
       input.category,
@@ -208,53 +212,51 @@ export function createFound(db: Db, finderId: string, input: NewFound, now = new
       input.deskId,
       input.meetLocationId,
       ts,
-      ts,
     );
-    input.questions.forEach((q, position) => {
-      const salt = newSalt();
-      run(
-        db,
-        "INSERT INTO questions (id, found_id, position, question, salt, answer_hash) VALUES (?, ?, ?, ?, ?, ?)",
-        randomUUID(),
+    for (const q of questions) {
+      await run(
+        tx,
+        "INSERT INTO {schema}.questions (id, found_id, position, question, salt, answer_hash) VALUES ($1, $2, $3, $4, $5, $6)",
+        q.id,
         id,
-        position,
+        q.position,
         q.question,
-        salt,
-        hashAnswer(q.answer, salt),
+        q.salt,
+        q.hash,
       );
-    });
+    }
   });
-  return getFound(db, id)!;
+  return (await getFound(db, id))!;
 }
 
-export function getLost(db: Db, id: string): LostItem | undefined {
-  const row = one(db, "SELECT * FROM lost_items WHERE id = ?", id);
+export async function getLost(db: Db, id: string): Promise<LostItem | undefined> {
+  const row = await one(db, "SELECT * FROM {schema}.lost_items WHERE id = $1", id);
   return row && toLost(row);
 }
 
-export function getFound(db: Db, id: string): FoundItem | undefined {
-  const row = one(db, "SELECT * FROM found_items WHERE id = ?", id);
+export async function getFound(db: Db, id: string): Promise<FoundItem | undefined> {
+  const row = await one(db, "SELECT * FROM {schema}.found_items WHERE id = $1", id);
   return row && toFound(row);
 }
 
-export function listLostByOwner(db: Db, ownerId: string): LostItem[] {
-  return all(db, "SELECT * FROM lost_items WHERE owner_id = ? ORDER BY created_at DESC", ownerId).map(toLost);
+export async function listLostByOwner(db: Db, ownerId: string): Promise<LostItem[]> {
+  return (await all(db, "SELECT * FROM {schema}.lost_items WHERE owner_id = $1 ORDER BY created_at DESC, id", ownerId)).map(toLost);
 }
 
-export function listFoundByFinder(db: Db, finderId: string): FoundItem[] {
-  return all(db, "SELECT * FROM found_items WHERE finder_id = ? ORDER BY created_at DESC", finderId).map(toFound);
+export async function listFoundByFinder(db: Db, finderId: string): Promise<FoundItem[]> {
+  return (await all(db, "SELECT * FROM {schema}.found_items WHERE finder_id = $1 ORDER BY created_at DESC, id", finderId)).map(toFound);
 }
 
-export function listOpenLost(db: Db): LostItem[] {
-  return all(db, "SELECT * FROM lost_items WHERE status = 'open' ORDER BY created_at DESC").map(toLost);
+export async function listOpenLost(db: Db): Promise<LostItem[]> {
+  return (await all(db, "SELECT * FROM {schema}.lost_items WHERE status = 'open' ORDER BY created_at DESC, id")).map(toLost);
 }
 
-export function listOpenFound(db: Db): FoundItem[] {
-  return all(db, "SELECT * FROM found_items WHERE status = 'open' ORDER BY created_at DESC").map(toFound);
+export async function listOpenFound(db: Db, limit = 50): Promise<FoundItem[]> {
+  return (await all(db, "SELECT * FROM {schema}.found_items WHERE status = 'open' ORDER BY created_at DESC, id LIMIT $1", limit)).map(toFound);
 }
 
-export function listQuestions(db: Db, foundId: string) {
-  return all(db, "SELECT * FROM questions WHERE found_id = ? ORDER BY position", foundId).map((r) => ({
+export async function listQuestions(db: Db, foundId: string) {
+  return (await all(db, "SELECT * FROM {schema}.questions WHERE found_id = $1 ORDER BY position", foundId)).map((r) => ({
     id: String(r.id),
     position: Number(r.position),
     question: String(r.question),
@@ -263,24 +265,24 @@ export function listQuestions(db: Db, foundId: string) {
   }));
 }
 
-export function setLostStatus(db: Db, id: string, status: LostStatus, now = new Date()): void {
-  run(db, "UPDATE lost_items SET status = ?, updated_at = ? WHERE id = ?", status, now.toISOString(), id);
+export async function setLostStatus(db: Db, id: string, status: LostStatus, now = new Date()): Promise<void> {
+  await run(db, "UPDATE {schema}.lost_items SET status = $1, updated_at = $2 WHERE id = $3", status, now.toISOString(), id);
 }
 
-export function setFoundStatus(db: Db, id: string, status: FoundStatus, now = new Date()): void {
-  run(db, "UPDATE found_items SET status = ?, updated_at = ? WHERE id = ?", status, now.toISOString(), id);
+export async function setFoundStatus(db: Db, id: string, status: FoundStatus, now = new Date()): Promise<void> {
+  await run(db, "UPDATE {schema}.found_items SET status = $1, updated_at = $2 WHERE id = $3", status, now.toISOString(), id);
 }
 
-export function markReceived(db: Db, id: string, now = new Date()): void {
-  run(db, "UPDATE found_items SET received_at = ?, updated_at = ? WHERE id = ?", now.toISOString(), now.toISOString(), id);
+export async function markReceived(db: Db, id: string, now = new Date()): Promise<void> {
+  await run(db, "UPDATE {schema}.found_items SET received_at = $1, updated_at = $1 WHERE id = $2", now.toISOString(), id);
 }
 
 /** Closes open reports with no activity since the cutoff. Returns how many were closed. */
-export function closeStaleReports(db: Db, olderThanDays: number, now = new Date()): number {
+export async function closeStaleReports(db: Db, olderThanDays: number, now = new Date()): Promise<number> {
   const cutoff = new Date(now.getTime() - olderThanDays * 86_400_000).toISOString();
   const ts = now.toISOString();
   return (
-    run(db, "UPDATE lost_items SET status = 'closed', updated_at = ? WHERE status = 'open' AND updated_at < ?", ts, cutoff) +
-    run(db, "UPDATE found_items SET status = 'closed', updated_at = ? WHERE status = 'open' AND updated_at < ?", ts, cutoff)
+    (await run(db, "UPDATE {schema}.lost_items SET status = 'closed', updated_at = $1 WHERE status = 'open' AND updated_at < $2", ts, cutoff)) +
+    (await run(db, "UPDATE {schema}.found_items SET status = 'closed', updated_at = $1 WHERE status = 'open' AND updated_at < $2", ts, cutoff))
   );
 }

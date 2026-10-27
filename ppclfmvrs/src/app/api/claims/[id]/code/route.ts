@@ -9,7 +9,7 @@ export async function POST(request: NextRequest, ctx: RouteContext<"/api/claims/
     await readJson(request);
     const user = await requireUser();
     const { id } = await ctx.params;
-    const { code, expiresAt } = reissueCode(getDb(), user, id);
+    const { code, expiresAt } = await reissueCode(await getDb(), user, id);
     return json({ handoverCode: code, expiresAt, qr: await qrDataUrl(code) });
   });
 }

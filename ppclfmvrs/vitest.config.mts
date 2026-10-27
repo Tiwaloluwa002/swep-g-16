@@ -7,5 +7,7 @@ export default defineConfig({
   },
   test: {
     include: ["src/**/*.test.ts"],
+    // Seeding hashes many passwords and answers with scrypt; give it room on slow machines.
+    testTimeout: 20_000,
   },
 });

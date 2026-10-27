@@ -9,9 +9,9 @@ export async function GET(_request: NextRequest, ctx: RouteContext<"/api/claims/
   return handle(async () => {
     const user = await requireUser();
     const { id } = await ctx.params;
-    const db = getDb();
-    const claim = getClaim(db, id);
+    const db = await getDb();
+    const claim = await getClaim(db, id);
     if (!claim || claim.claimantId !== user.id) throw new HttpError(404, "Claim not found.");
-    return json(claimView(db, claim));
+    return json(await claimView(db, claim));
   });
 }

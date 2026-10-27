@@ -1,28 +1,28 @@
 import { CATEGORIES, getDesk } from "@/lib/catalog";
 import type { DeskItem, FailedAttempt, Stats } from "@/lib/public-types";
 import type { User } from "@/lib/types";
-import { all, type Db, one } from "./db";
+import { all, count, type Db, iso, isoOrNull, type Param } from "./db";
 import { toFound } from "./items";
 import { publicFound } from "./serialize";
 
-/** Desk officers see their own desk; admins see every desk. */
-function deskFilter(user: User): [string, (string | null)[]] {
-  return user.role === "admin" ? ["", []] : [" AND f.desk_id = ?", [user.deskId]];
+/** Desk officers see their own desk; admins see every desk. Returns an extra WHERE clause and its parameters. */
+function deskFilter(user: User): [string, Param[]] {
+  return user.role === "admin" ? ["", []] : [" AND f.desk_id = $1", [user.deskId]];
 }
 
 /** Items handed (or due to be handed) to a desk and not yet recovered or closed. */
-export function listDeskItems(db: Db, user: User): DeskItem[] {
+export async function listDeskItems(db: Db, user: User): Promise<DeskItem[]> {
   const [where, params] = deskFilter(user);
-  const rows = all(
+  const rows = await all(
     db,
     `SELECT f.*, (
-       SELECT h.expires_at FROM claims c JOIN handover_codes h ON h.claim_id = c.id
-       WHERE c.found_id = f.id AND c.status = 'verified' AND h.used_at IS NULL AND h.revoked = 0
+       SELECT h.expires_at FROM {schema}.claims c JOIN {schema}.handover_codes h ON h.claim_id = c.id
+       WHERE c.found_id = f.id AND c.status = 'verified' AND h.used_at IS NULL AND NOT h.revoked
        ORDER BY h.created_at DESC LIMIT 1
      ) AS code_expires
-     FROM found_items f
+     FROM {schema}.found_items f
      WHERE f.custody = 'desk' AND f.status IN ('open', 'pending_handover')${where}
-     ORDER BY f.created_at DESC`,
+     ORDER BY f.created_at DESC, f.id`,
     ...params,
   );
   return rows.map((row) => {
@@ -31,28 +31,29 @@ export function listDeskItems(db: Db, user: User): DeskItem[] {
       ...publicFound(item),
       deskName: getDesk(item.deskId)?.name ?? null,
       receivedAt: item.receivedAt,
-      awaitingCollectionUntil: (row.code_expires as string | null) ?? null,
+      awaitingCollectionUntil: isoOrNull(row.code_expires),
     };
   });
 }
 
 /** Wrong-answer attempts, newest first. Staff see the claimant's ident so repeat fishing can be followed up. */
-export function listFailedAttempts(db: Db, user: User, limit = 50): FailedAttempt[] {
+export async function listFailedAttempts(db: Db, user: User, limit = 50): Promise<FailedAttempt[]> {
   const [where, params] = deskFilter(user);
-  return all(
+  const rows = await all(
     db,
     `SELECT a.id, a.created_at, a.claim_id, u.ident, c.status AS claim_status, f.category, f.colour
-     FROM claim_attempts a
-     JOIN claims c ON c.id = a.claim_id
-     JOIN users u ON u.id = a.user_id
-     JOIN found_items f ON f.id = c.found_id
-     WHERE a.success = 0${where}
-     ORDER BY a.created_at DESC LIMIT ?`,
+     FROM {schema}.claim_attempts a
+     JOIN {schema}.claims c ON c.id = a.claim_id
+     JOIN {schema}.users u ON u.id = a.user_id
+     JOIN {schema}.found_items f ON f.id = c.found_id
+     WHERE NOT a.success${where}
+     ORDER BY a.created_at DESC, a.id LIMIT $${params.length + 1}`,
     ...params,
     limit,
-  ).map((r) => ({
+  );
+  return rows.map((r) => ({
     id: String(r.id),
-    createdAt: String(r.created_at),
+    createdAt: iso(r.created_at),
     claimantIdent: String(r.ident),
     claimId: String(r.claim_id),
     itemSummary: `${r.colour} ${CATEGORIES[r.category as keyof typeof CATEGORIES]?.toLowerCase() ?? r.category}`,
@@ -60,14 +61,15 @@ export function listFailedAttempts(db: Db, user: User, limit = 50): FailedAttemp
   }));
 }
 
-export function getStats(db: Db): Stats {
-  const n = (sql: string) => Number(one(db, sql)!.n);
-  return {
-    lostReported: n("SELECT COUNT(*) AS n FROM lost_items"),
-    foundReported: n("SELECT COUNT(*) AS n FROM found_items"),
-    matched: n("SELECT COUNT(DISTINCT found_id) AS n FROM matches"),
-    verified: n("SELECT COUNT(*) AS n FROM claims WHERE status IN ('verified', 'completed')"),
-    recovered: n("SELECT COUNT(*) AS n FROM found_items WHERE status = 'recovered'"),
-    failedAttempts: n("SELECT COUNT(*) AS n FROM claim_attempts WHERE success = 0"),
-  };
+export async function getStats(db: Db): Promise<Stats> {
+  const n = (sql: string) => count(db, sql);
+  const [lostReported, foundReported, matched, verified, recovered, failedAttempts] = await Promise.all([
+    n("SELECT COUNT(*)::int AS n FROM {schema}.lost_items"),
+    n("SELECT COUNT(*)::int AS n FROM {schema}.found_items"),
+    n("SELECT COUNT(DISTINCT found_id)::int AS n FROM {schema}.matches"),
+    n("SELECT COUNT(*)::int AS n FROM {schema}.claims WHERE status IN ('verified', 'completed')"),
+    n("SELECT COUNT(*)::int AS n FROM {schema}.found_items WHERE status = 'recovered'"),
+    n("SELECT COUNT(*)::int AS n FROM {schema}.claim_attempts WHERE NOT success"),
+  ]);
+  return { lostReported, foundReported, matched, verified, recovered, failedAttempts };
 }

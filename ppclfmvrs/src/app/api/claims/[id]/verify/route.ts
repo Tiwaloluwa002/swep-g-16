@@ -9,7 +9,7 @@ export async function POST(request: NextRequest, ctx: RouteContext<"/api/claims/
     const user = await requireUser();
     const { id } = await ctx.params;
     const body = (await readJson(request)) as { answers?: unknown } | null;
-    const result = verifyClaim(getDb(), user, id, body?.answers);
+    const result = await verifyClaim(await getDb(), user, id, body?.answers);
     if (result.outcome !== "verified") return json(result);
     return json({ outcome: result.outcome, handoverCode: result.code, expiresAt: result.expiresAt, qr: await qrDataUrl(result.code) });
   });

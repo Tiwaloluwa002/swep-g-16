@@ -10,11 +10,11 @@ export async function GET() {
   await connection();
   return handle(async () => {
     const user = await requireUser();
-    const db = getDb();
-    const items = listLostByOwner(db, user.id).map((item) => ({
-      ...ownLost(item),
-      candidateCount: item.status === "open" ? candidatesFor(db, item).length : 0,
-    }));
+    const db = await getDb();
+    const items = [];
+    for (const item of await listLostByOwner(db, user.id)) {
+      items.push({ ...ownLost(item), candidateCount: item.status === "open" ? (await candidatesFor(db, item)).length : 0 });
+    }
     return json(items, 200, { allowPrivateDetails: true });
   });
 }
@@ -24,9 +24,9 @@ export async function POST(request: Request) {
     const user = await requireUser();
     const parsed = parseNewLost(await readJson(request));
     if (typeof parsed === "string") throw new HttpError(400, parsed);
-    const db = getDb();
-    const item = createLost(db, user.id, parsed);
-    matchNewLost(db, item);
+    const db = await getDb();
+    const item = await createLost(db, user.id, parsed);
+    await matchNewLost(db, item);
     return json(ownLost(item), 201, { allowPrivateDetails: true });
   });
 }

@@ -9,12 +9,12 @@ export async function POST(request: NextRequest, ctx: RouteContext<"/api/desk/it
     await readJson(request);
     const user = await requireUser("desk", "admin");
     const { id } = await ctx.params;
-    const db = getDb();
-    const item = getFound(db, id);
+    const db = await getDb();
+    const item = await getFound(db, id);
     if (!item || item.custody !== "desk" || (user.role === "desk" && item.deskId !== user.deskId)) {
       throw new HttpError(404, "Item not found at your desk.");
     }
-    markReceived(db, item.id);
+    await markReceived(db, item.id);
     return json({ ok: true });
   });
 }

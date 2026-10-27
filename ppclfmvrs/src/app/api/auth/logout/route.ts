@@ -7,7 +7,7 @@ export async function POST(request: Request) {
   return handle(async () => {
     await readJson(request);
     const token = await sessionToken();
-    if (token) deleteSession(getDb(), token);
+    if (token) await deleteSession(await getDb(), token);
     (await cookies()).delete(SESSION_COOKIE);
     return json({ ok: true });
   });

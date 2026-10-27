@@ -20,3 +20,10 @@ export function checkAttempt(claimAttempts: number, userAttemptsInWindow: number
   }
   return { ok: true };
 }
+
+/** Failed sign-ins allowed per account (matric/staff number) in the window. */
+export const MAX_LOGIN_FAILURES_PER_ACCOUNT = 5;
+/** Failed sign-ins allowed from one IP address in the window, across accounts. */
+export const MAX_LOGIN_FAILURES_PER_IP = 30;
+export const LOGIN_WINDOW_MS = 15 * 60 * 1000;
+export const LOGIN_LIMIT_MESSAGE = "Too many failed sign-in attempts. Wait 15 minutes and try again.";

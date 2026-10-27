@@ -13,7 +13,17 @@ export async function sessionToken(): Promise<string | undefined> {
 }
 
 export async function currentUser(): Promise<User | null> {
-  return getSessionUser(getDb(), await sessionToken());
+  return getSessionUser(await getDb(), await sessionToken());
+}
+
+/**
+ * The caller's IP for the sign-in rate limit. Behind Vercel or a reverse
+ * proxy this is the first x-forwarded-for entry; elsewhere the header can be
+ * forged, which only weakens the per-IP limit (the per-account limit stays).
+ */
+export function clientIp(request: Request): string {
+  const forwarded = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim();
+  return (forwarded || request.headers.get("x-real-ip")?.trim() || "unknown").slice(0, 64);
 }
 
 /** Thrown by route code; turned into a JSON error by `handle`. */

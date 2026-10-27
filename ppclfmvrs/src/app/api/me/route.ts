@@ -1,6 +1,6 @@
 import { connection } from "next/server";
-import { one } from "@/lib/server/db";
 import { currentUser, handle, json } from "@/lib/server/http";
+import { unreadCount } from "@/lib/server/notifications";
 import { sessionUser } from "@/lib/server/serialize";
 import { getDb } from "@/lib/server/store";
 
@@ -9,7 +9,7 @@ export async function GET() {
   return handle(async () => {
     const user = await currentUser();
     if (!user) return json({ user: null, unread: 0 });
-    const unread = Number(one(getDb(), "SELECT COUNT(*) AS n FROM notifications WHERE user_id = ? AND read = 0", user.id)!.n);
+    const unread = await unreadCount(await getDb(), user.id);
     return json({ user: sessionUser(user), unread });
   });
 }

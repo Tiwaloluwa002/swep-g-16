@@ -15,39 +15,39 @@ function expectNoSecrets(value: unknown, extra: string[] = []) {
 }
 
 describe("public serializers", () => {
-  it("never expose private details, hashes or identities", () => {
-    const { db, owner, finder, lost, found } = fixture();
-    const hashes = listQuestions(db, found.id).flatMap((q) => [q.salt, q.answerHash]);
+  it("never expose private details, hashes or identities", async () => {
+    const { db, owner, finder, lost, found } = await fixture();
+    const hashes = (await listQuestions(db, found.id)).flatMap((q) => [q.salt, q.answerHash]);
     const ids = [owner.id, finder.id, owner.passwordHash, finder.passwordHash];
     expectNoSecrets(publicLost(lost), [...hashes, ...ids]);
     expectNoSecrets(publicFound(found), [...hashes, ...ids]);
-    expectNoSecrets(candidatesFor(db, lost), [...hashes, ...ids]);
+    expectNoSecrets(await candidatesFor(db, lost), [...hashes, ...ids]);
     expectNoSecrets(ownFound(found, ["What sticker is on the back?"], false), [...hashes, ...ids]);
     expectNoSecrets(sessionUser(owner), [owner.passwordHash]);
   });
 
-  it("only copy allowlisted fields", () => {
-    const { found, lost } = fixture();
+  it("only copy allowlisted fields", async () => {
+    const { found, lost } = await fixture();
     expect(Object.keys(publicFound(found)).sort()).toEqual(
       ["category", "colour", "createdAt", "custody", "description", "foundDate", "id", "locationId", "locationName", "status"].sort(),
     );
     expect(Object.keys(publicLost(lost))).not.toContain("privateDetails");
   });
 
-  it("keep the claim view and desk views free of secrets, even after verification", () => {
-    const { db, owner, officer, lost, found } = fixture();
-    const claim = startClaim(db, owner, lost.id, found.id, NOW);
-    verifyClaim(db, owner, claim.id, ["wrong", "wrong"], NOW);
-    const result = verifyClaim(db, owner, claim.id, ["blue star", "a cat"], NOW);
+  it("keep the claim view and desk views free of secrets, even after verification", async () => {
+    const { db, owner, officer, lost, found } = await fixture();
+    const claim = await startClaim(db, owner, lost.id, found.id, NOW);
+    await verifyClaim(db, owner, claim.id, ["wrong", "wrong"], NOW);
+    const result = await verifyClaim(db, owner, claim.id, ["blue star", "a cat"], NOW);
     const code = result.outcome === "verified" ? result.code : "";
-    const view = claimView(db, { ...claim, status: "verified" });
+    const view = await claimView(db, { ...claim, status: "verified" });
     expectNoSecrets(view, [code, "Blue Star"]);
-    expectNoSecrets(listDeskItems(db, officer), [code]);
-    expectNoSecrets(listFailedAttempts(db, officer));
+    expectNoSecrets(await listDeskItems(db, officer), [code]);
+    expectNoSecrets(await listFailedAttempts(db, officer));
   });
 
-  it("let only the owner's own view carry private details", () => {
-    const { lost } = fixture();
+  it("let only the owner's own view carry private details", async () => {
+    const { lost } = await fixture();
     const own = ownLost(lost);
     expect(own.privateDetails.serialLastDigits).toBe("4417");
     expect(() => assertNoLeaks(own)).toThrow(PrivacyLeakError);

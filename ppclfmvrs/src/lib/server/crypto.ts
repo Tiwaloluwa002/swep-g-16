@@ -1,4 +1,5 @@
-import { createHash, randomBytes, randomInt, scryptSync, timingSafeEqual } from "node:crypto";
+import { createHash, randomBytes, randomInt, scrypt, scryptSync, timingSafeEqual } from "node:crypto";
+import { promisify } from "node:util";
 import { normalizeAnswer } from "@/lib/text";
 
 const KEY_LENGTH = 32;
@@ -38,8 +39,12 @@ export function hashAnswer(answer: string, salt: string): string {
   return scryptHex(normalizeAnswer(answer), salt);
 }
 
-export function answerMatches(answer: string, salt: string, storedHash: string): boolean {
-  return equalHex(hashAnswer(answer, salt), storedHash);
+const scryptAsync = promisify(scrypt) as (secret: string, salt: string, length: number) => Promise<Buffer>;
+
+/** Async, so checking a claim's answers runs on the thread pool instead of blocking other requests. */
+export async function answerMatches(answer: string, salt: string, storedHash: string): Promise<boolean> {
+  const hash = (await scryptAsync(normalizeAnswer(answer), salt, KEY_LENGTH)).toString("hex");
+  return equalHex(hash, storedHash);
 }
 
 export function sha256(value: string): string {

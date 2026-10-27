@@ -38,7 +38,7 @@ When students lose phones, ID cards, wallets, keys, laptops or bags on campus, f
 
 ## Status
 
-The MVP is complete: all features above work end to end. 38 unit tests pass, and `tsc`, `eslint` and `next build` are clean. The API was smoke-tested with curl and the UI checked in headless Chrome at phone and desktop widths. See [Limitations](#limitations-and-future-work) for what is deliberately left out.
+The MVP is complete: all features above work end to end. Storage now runs on Postgres (PGlite locally, a hosted Postgres such as Supabase in production), and sign-in has a rate limit. 51 unit tests pass on PGlite and on a real PostgreSQL 17 server, and `tsc`, `eslint` and `next build` are clean. The API was smoke-tested with curl and the UI checked in headless Chrome at phone and desktop widths. See [Limitations](#limitations-and-future-work) for what is deliberately left out.
 
 ## How to run
 

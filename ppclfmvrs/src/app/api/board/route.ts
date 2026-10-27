@@ -7,5 +7,5 @@ import { getDb } from "@/lib/server/store";
 /** Public board of open found items: generic fields only, readable without signing in. */
 export async function GET() {
   await connection();
-  return handle(async () => json(listOpenFound(getDb()).slice(0, 50).map(publicFound)));
+  return handle(async () => json((await listOpenFound(await getDb(), 50)).map(publicFound)));
 }

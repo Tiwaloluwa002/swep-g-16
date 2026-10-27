@@ -8,7 +8,7 @@ export async function POST(request: Request) {
     const user = await requireUser();
     const body = (await readJson(request)) as { code?: unknown } | null;
     if (typeof body?.code !== "string" || !body.code.trim()) throw new HttpError(400, "Enter the handover code.");
-    const result = confirmHandover(getDb(), user, body.code);
+    const result = await confirmHandover(await getDb(), user, body.code);
     return json({ ok: true, item: result.item, foundId: result.foundId });
   });
 }

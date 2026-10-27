@@ -13,7 +13,7 @@ function canManage(user: User, finderId: string, deskId: string | null) {
 async function managedItem(ctx: RouteContext<"/api/found/[id]">) {
   const user = await requireUser();
   const { id } = await ctx.params;
-  const item = getFound(getDb(), id);
+  const item = await getFound(await getDb(), id);
   if (!item || !canManage(user, item.finderId, item.deskId)) throw new HttpError(404, "Found report not found.");
   return item;
 }
@@ -23,7 +23,7 @@ export async function GET(_request: NextRequest, ctx: RouteContext<"/api/found/[
   await connection();
   return handle(async () => {
     const item = await managedItem(ctx);
-    const questions = listQuestions(getDb(), item.id).map((q) => q.question);
+    const questions = (await listQuestions(await getDb(), item.id)).map((q) => q.question);
     return json(ownFound(item, questions, item.status === "pending_handover"));
   });
 }
@@ -34,7 +34,7 @@ export async function PATCH(request: NextRequest, ctx: RouteContext<"/api/found/
     const item = await managedItem(ctx);
     if (body?.status !== "closed") throw new HttpError(400, "Only closing a report is supported.");
     if (item.status !== "open") throw new HttpError(409, "Only an open report can be closed.");
-    setFoundStatus(getDb(), item.id, "closed");
+    await setFoundStatus(await getDb(), item.id, "closed");
     return json({ ok: true });
   });
 }
