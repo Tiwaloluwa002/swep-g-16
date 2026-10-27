@@ -7,7 +7,7 @@ import { TICKET_STATUS_LABELS } from "@/lib/labels";
 /** Query: ?status=active|redeemed|expired|refunded&routeId=1&q=matric-or-code */
 export async function GET(request: Request) {
   await connection();
-  const user = requireUser(request, ["admin"]);
+  const user = await requireUser(request, ["admin"]);
   if (user instanceof Response) return user;
   const params = new URL(request.url).searchParams;
   const status = params.get("status");
@@ -16,5 +16,5 @@ export async function GET(request: Request) {
     routeId: Number(params.get("routeId")) || undefined,
     q: params.get("q")?.slice(0, 60) || undefined,
   };
-  return Response.json({ tickets: listAllTickets(getDb(), filter) });
+  return Response.json({ tickets: await listAllTickets(await getDb(), filter) });
 }

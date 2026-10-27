@@ -27,9 +27,9 @@ export function sameOrigin(request: Request): boolean {
 }
 
 /** Returns the signed-in user, or a Response to send back if they are not allowed in. */
-export function requireUser(request: Request, roles?: Role[]): SessionUser | Response {
+export async function requireUser(request: Request, roles?: Role[]): Promise<SessionUser | Response> {
   if (request.method !== "GET" && !sameOrigin(request)) return jsonError("Cross-site request refused.", 403);
-  const user = userForSession(getDb(), readCookie(request, SESSION_COOKIE));
+  const user = await userForSession(await getDb(), readCookie(request, SESSION_COOKIE));
   if (!user) return jsonError("Please sign in.", 401);
   if (roles && !roles.includes(user.role)) return jsonError("You do not have access to this.", 403);
   return user;

@@ -11,16 +11,16 @@ export async function POST(request: Request) {
   const password = typeof body.password === "string" ? body.password.slice(0, 200) : "";
   if (!matric || !password) return jsonError("Enter your matric or staff number and password.", 400);
 
-  const db = getDb();
+  const db = await getDb();
   const ip = clientIp(request);
   const accountKey = `login:acct:${matric}`;
   for (const [key, cfg] of [
     [accountKey, LIMITS.loginAccount],
     [`login:ip:${ip}`, LIMITS.loginIp],
   ] as const) {
-    const limit = rateLimit(key, cfg.limit, cfg.windowMs);
+    const limit = await rateLimit(db, key, cfg.limit, cfg.windowMs);
     if (!limit.ok) {
-      if (limit.firstRefusal) logFraud(db, { kind: "rate_limit_login", ip, detail: `Too many sign-ins for ${matric}` });
+      if (limit.firstRefusal) await logFraud(db, { kind: "rate_limit_login", ip, detail: `Too many sign-ins for ${matric}` });
       const minutes = Math.ceil(limit.retryAfterMs / 60_000);
       return jsonError(`Too many attempts. Try again in ${minutes} minute${minutes === 1 ? "" : "s"}.`, 429, {
         "retry-after": String(Math.ceil(limit.retryAfterMs / 1000)),
@@ -30,7 +30,7 @@ export async function POST(request: Request) {
 
   const user = await checkCredentials(db, matric, password);
   if (!user) return jsonError("Wrong matric/staff number or password.", 401);
-  resetRateLimit(accountKey);
-  const token = createSession(db, user.id);
+  await resetRateLimit(db, accountKey);
+  const token = await createSession(db, user.id);
   return Response.json({ user }, { headers: { "set-cookie": sessionCookie(token) } });
 }

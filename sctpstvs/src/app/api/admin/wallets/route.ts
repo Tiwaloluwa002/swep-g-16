@@ -5,7 +5,7 @@ import { listStudentWallets } from "@/lib/server/wallet";
 
 export async function GET(request: Request) {
   await connection();
-  const user = requireUser(request, ["admin"]);
+  const user = await requireUser(request, ["admin"]);
   if (user instanceof Response) return user;
-  return Response.json({ wallets: listStudentWallets(getDb()) });
+  return Response.json({ wallets: await listStudentWallets(await getDb()) });
 }

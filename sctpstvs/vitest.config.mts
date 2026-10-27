@@ -7,5 +7,9 @@ export default defineConfig({
   },
   test: {
     include: ["src/**/*.test.ts"],
+    globalSetup: ["./vitest.global-setup.ts"],
+    // Starting PGlite (Postgres in WebAssembly) takes a few seconds the first time in each file.
+    testTimeout: 60_000,
+    hookTimeout: 60_000,
   },
 });

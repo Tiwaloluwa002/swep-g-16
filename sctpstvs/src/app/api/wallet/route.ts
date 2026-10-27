@@ -5,8 +5,8 @@ import { getBalance, listLedger } from "@/lib/server/wallet";
 
 export async function GET(request: Request) {
   await connection();
-  const user = requireUser(request, ["student"]);
+  const user = await requireUser(request, ["student"]);
   if (user instanceof Response) return user;
-  const db = getDb();
-  return Response.json({ balanceKobo: getBalance(db, user.id), ledger: listLedger(db, user.id) });
+  const db = await getDb();
+  return Response.json({ balanceKobo: await getBalance(db, user.id), ledger: await listLedger(db, user.id) });
 }

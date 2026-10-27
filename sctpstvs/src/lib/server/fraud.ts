@@ -1,4 +1,4 @@
-import type { Db } from "@/lib/server/db";
+import { type Db, ms, ts } from "@/lib/server/db";
 import type { FraudEvent, FraudKind } from "@/lib/types";
 
 export interface FraudInput {
@@ -11,40 +11,43 @@ export interface FraudInput {
   now?: number;
 }
 
-export function logFraud(db: Db, e: FraudInput): void {
-  db.prepare(
-    "INSERT INTO fraud_log (at, kind, ticket_id, actor_id, vehicle, ip, detail) VALUES (?, ?, ?, ?, ?, ?, ?)",
-  ).run(
-    e.now ?? Date.now(),
-    e.kind,
-    e.ticketId ?? null,
-    e.actorId ?? null,
-    e.vehicle ?? null,
-    e.ip ?? null,
-    e.detail?.slice(0, 300) ?? null,
+export async function logFraud(db: Db, e: FraudInput): Promise<void> {
+  await db.query(
+    "INSERT INTO {schema}.fraud_log (at, kind, ticket_id, actor_id, vehicle, ip, detail) VALUES ($1, $2, $3, $4, $5, $6, $7)",
+    [
+      ts(e.now ?? Date.now()),
+      e.kind,
+      e.ticketId ?? null,
+      e.actorId ?? null,
+      e.vehicle ?? null,
+      e.ip ?? null,
+      e.detail?.slice(0, 300) ?? null,
+    ],
   );
 }
 
-export function listFraud(db: Db, { kind, limit = 200 }: { kind?: FraudKind; limit?: number } = {}): FraudEvent[] {
-  const rows = db
-    .prepare(
-      `SELECT f.id, f.at, f.kind, f.ticket_id, u.name AS actor_name, f.vehicle, f.ip, f.detail
-       FROM fraud_log f LEFT JOIN users u ON u.id = f.actor_id
-       WHERE (? IS NULL OR f.kind = ?) ORDER BY f.id DESC LIMIT ?`,
-    )
-    .all(kind ?? null, kind ?? null, limit) as {
+export async function listFraud(
+  db: Db,
+  { kind, limit = 200 }: { kind?: FraudKind; limit?: number } = {},
+): Promise<FraudEvent[]> {
+  const rows = await db.query<{
     id: number;
-    at: number;
+    at: Date;
     kind: FraudKind;
     ticket_id: string | null;
     actor_name: string | null;
     vehicle: string | null;
     ip: string | null;
     detail: string | null;
-  }[];
+  }>(
+    `SELECT f.id, f.at, f.kind, f.ticket_id, u.name AS actor_name, f.vehicle, f.ip, f.detail
+     FROM {schema}.fraud_log f LEFT JOIN {schema}.users u ON u.id = f.actor_id
+     WHERE ($1::text IS NULL OR f.kind = $1) ORDER BY f.id DESC LIMIT $2`,
+    [kind ?? null, limit],
+  );
   return rows.map((r) => ({
     id: r.id,
-    at: r.at,
+    at: ms(r.at),
     kind: r.kind,
     ticketId: r.ticket_id,
     actorName: r.actor_name,

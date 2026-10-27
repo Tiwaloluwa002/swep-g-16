@@ -7,11 +7,14 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "vitest run"
+    "test": "vitest run",
+    "gen-key": "node scripts/gen-key.mjs"
   },
   "dependencies": {
+    "@electric-sql/pglite": "^0.5.12",
     "@zxing/browser": "^0.2.1",
     "next": "16.4.2",
+    "postgres": "^3.4.9",
     "qrcode": "^1.5.4",
     "react": "19.3.0",
     "react-dom": "19.3.0"

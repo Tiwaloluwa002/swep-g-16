@@ -4,12 +4,12 @@ import { handleError, readJson, requireUser } from "@/lib/server/http";
 
 /** Body: { name, routeId: number | null }. Listing uses GET /api/vehicles. */
 export async function POST(request: Request) {
-  const user = requireUser(request, ["admin"]);
+  const user = await requireUser(request, ["admin"]);
   if (user instanceof Response) return user;
   const body = await readJson(request);
   try {
     const routeId = body.routeId ? Number(body.routeId) : null;
-    return Response.json({ vehicle: createVehicle(getDb(), String(body.name ?? ""), routeId) }, { status: 201 });
+    return Response.json({ vehicle: await createVehicle(await getDb(), String(body.name ?? ""), routeId) }, { status: 201 });
   } catch (err) {
     return handleError(err);
   }

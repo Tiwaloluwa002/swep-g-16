@@ -4,5 +4,5 @@ import { getDb } from "@/lib/server/context";
 
 export async function GET() {
   await connection();
-  return Response.json({ routes: listRoutes(getDb()) });
+  return Response.json({ routes: await listRoutes(await getDb()) });
 }

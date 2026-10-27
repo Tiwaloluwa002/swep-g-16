@@ -5,7 +5,7 @@ import { adminStats } from "@/lib/server/stats";
 
 export async function GET(request: Request) {
   await connection();
-  const user = requireUser(request, ["admin"]);
+  const user = await requireUser(request, ["admin"]);
   if (user instanceof Response) return user;
-  return Response.json(adminStats(getDb()));
+  return Response.json(await adminStats(await getDb()));
 }

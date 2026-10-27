@@ -1,5 +1,5 @@
 import { createHash, randomBytes } from "node:crypto";
-import type { Db } from "@/lib/server/db";
+import { type Db, ts } from "@/lib/server/db";
 import { dummyPasswordHash, verifyPassword } from "@/lib/server/passwords";
 import type { Role, SessionUser } from "@/lib/types";
 
@@ -19,37 +19,34 @@ interface UserRow {
 
 /** Checks credentials; returns the user or null. Takes the same time whether or not the account exists. */
 export async function checkCredentials(db: Db, matric: string, password: string): Promise<SessionUser | null> {
-  const user = db.prepare("SELECT * FROM users WHERE matric = ?").get(matric.trim()) as UserRow | undefined;
+  const user = await db.maybeOne<UserRow>("SELECT * FROM {schema}.users WHERE upper(matric) = upper($1)", [matric.trim()]);
   const ok = await verifyPassword(password, user?.password_hash ?? dummyPasswordHash());
   if (!user || !ok) return null;
   return { id: user.id, matric: user.matric, name: user.name, role: user.role };
 }
 
-export function createSession(db: Db, userId: number, now = Date.now()): string {
+export async function createSession(db: Db, userId: number, now = Date.now()): Promise<string> {
   const token = randomBytes(32).toString("base64url");
-  db.prepare("DELETE FROM sessions WHERE expires_at <= ?").run(now);
-  db.prepare("INSERT INTO sessions (token_hash, user_id, created_at, expires_at) VALUES (?, ?, ?, ?)").run(
-    hashToken(token),
-    userId,
-    now,
-    now + SESSION_TTL_MS,
+  await db.query("DELETE FROM {schema}.sessions WHERE expires_at <= $1", [ts(now)]);
+  await db.query(
+    "INSERT INTO {schema}.sessions (token_hash, user_id, created_at, expires_at) VALUES ($1, $2, $3, $4)",
+    [hashToken(token), userId, ts(now), ts(now + SESSION_TTL_MS)],
   );
   return token;
 }
 
-export function userForSession(db: Db, token: string | undefined, now = Date.now()): SessionUser | null {
+export async function userForSession(db: Db, token: string | undefined, now = Date.now()): Promise<SessionUser | null> {
   if (!token) return null;
-  const row = db
-    .prepare(
-      `SELECT u.id, u.matric, u.name, u.role FROM sessions s JOIN users u ON u.id = s.user_id
-       WHERE s.token_hash = ? AND s.expires_at > ?`,
-    )
-    .get(hashToken(token), now) as SessionUser | undefined;
+  const row = await db.maybeOne<SessionUser>(
+    `SELECT u.id, u.matric, u.name, u.role FROM {schema}.sessions s JOIN {schema}.users u ON u.id = s.user_id
+     WHERE s.token_hash = $1 AND s.expires_at > $2`,
+    [hashToken(token), ts(now)],
+  );
   return row ? { id: row.id, matric: row.matric, name: row.name, role: row.role } : null;
 }
 
-export function deleteSession(db: Db, token: string | undefined): void {
-  if (token) db.prepare("DELETE FROM sessions WHERE token_hash = ?").run(hashToken(token));
+export async function deleteSession(db: Db, token: string | undefined): Promise<void> {
+  if (token) await db.query("DELETE FROM {schema}.sessions WHERE token_hash = $1", [hashToken(token)]);
 }
 
 export function readCookie(request: Request, name: string): string | undefined {

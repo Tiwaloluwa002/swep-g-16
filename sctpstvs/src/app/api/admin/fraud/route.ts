@@ -7,9 +7,9 @@ import type { FraudKind } from "@/lib/types";
 
 export async function GET(request: Request) {
   await connection();
-  const user = requireUser(request, ["admin"]);
+  const user = await requireUser(request, ["admin"]);
   if (user instanceof Response) return user;
   const kind = new URL(request.url).searchParams.get("kind");
   const valid = kind && kind in FRAUD_LABELS ? (kind as FraudKind) : undefined;
-  return Response.json({ events: listFraud(getDb(), { kind: valid }) });
+  return Response.json({ events: await listFraud(await getDb(), { kind: valid }) });
 }

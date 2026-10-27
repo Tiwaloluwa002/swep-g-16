@@ -5,7 +5,7 @@ import { requireUser } from "@/lib/server/http";
 
 export async function GET(request: Request) {
   await connection();
-  const user = requireUser(request, ["conductor", "admin"]);
+  const user = await requireUser(request, ["conductor", "admin"]);
   if (user instanceof Response) return user;
-  return Response.json({ vehicles: listVehicles(getDb()) });
+  return Response.json({ vehicles: await listVehicles(await getDb()) });
 }

@@ -5,19 +5,19 @@ import { handleError, jsonError, readJson, requireUser } from "@/lib/server/http
 
 export async function GET(request: Request) {
   await connection();
-  const user = requireUser(request, ["admin"]);
+  const user = await requireUser(request, ["admin"]);
   if (user instanceof Response) return user;
-  return Response.json({ routes: listRoutes(getDb(), { includeInactive: true }) });
+  return Response.json({ routes: await listRoutes(await getDb(), { includeInactive: true }) });
 }
 
 /** Body: { name, origin, destination, fareNaira, active? } */
 export async function POST(request: Request) {
-  const user = requireUser(request, ["admin"]);
+  const user = await requireUser(request, ["admin"]);
   if (user instanceof Response) return user;
   const input = parseRouteInput(await readJson(request));
   if (typeof input === "string") return jsonError(input, 400);
   try {
-    return Response.json({ route: createRoute(getDb(), input as RouteInput) }, { status: 201 });
+    return Response.json({ route: await createRoute(await getDb(), input as RouteInput) }, { status: 201 });
   } catch (err) {
     return handleError(err);
   }

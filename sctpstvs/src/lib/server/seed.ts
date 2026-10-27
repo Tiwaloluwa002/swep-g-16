@@ -1,4 +1,4 @@
-import type { DatabaseSync } from "node:sqlite";
+import type { Db } from "@/lib/server/db";
 import { hashPasswordSync } from "@/lib/server/passwords";
 import type { Role } from "@/lib/types";
 
@@ -31,37 +31,42 @@ const DEMO_VEHICLES: [string, number | null][] = [
   ["Shuttle 5", null],
 ];
 
-/** Seeds only an empty database, so restarting never duplicates or resets data. */
-export function seedDemoData(db: DatabaseSync, now = Date.now()): void {
-  const { n } = db.prepare("SELECT COUNT(*) AS n FROM users").get() as { n: number };
+/**
+ * Seeds only an empty database, so restarting never duplicates or resets data.
+ * Called by migrate() inside its transaction, after it has taken the
+ * migration advisory lock, so two instances starting at once cannot both seed.
+ */
+export async function seedDemoData(db: Db, now = Date.now()): Promise<void> {
+  const { n } = await db.one<{ n: number }>("SELECT COUNT(*) AS n FROM {schema}.users");
   if (n > 0) return;
 
-  db.exec("BEGIN IMMEDIATE");
-  try {
-    const insertUser = db.prepare(
-      "INSERT INTO users (matric, name, role, password_hash, created_at) VALUES (?, ?, ?, ?, ?)",
+  const at = new Date(now);
+  for (const u of DEMO_USERS) {
+    const { id } = await db.one<{ id: number }>(
+      "INSERT INTO {schema}.users (matric, name, role, password_hash, created_at) VALUES ($1, $2, $3, $4, $5) RETURNING id",
+      [u.matric, u.name, u.role, hashPasswordSync(u.password), at],
     );
-    const credit = db.prepare(
-      "INSERT INTO ledger (user_id, kind, amount_kobo, note, created_at) VALUES (?, 'topup', ?, 'Demo starting balance', ?)",
-    );
-    for (const u of DEMO_USERS) {
-      const { lastInsertRowid } = insertUser.run(u.matric, u.name, u.role, hashPasswordSync(u.password), now);
-      if (u.startingNaira > 0) credit.run(lastInsertRowid, u.startingNaira * 100, now);
+    if (u.startingNaira > 0) {
+      await db.query(
+        "INSERT INTO {schema}.ledger (user_id, kind, amount_kobo, note, created_at) VALUES ($1, 'topup', $2, 'Demo starting balance', $3)",
+        [id, u.startingNaira * 100, at],
+      );
     }
+  }
 
-    const insertRoute = db.prepare(
-      "INSERT INTO routes (name, origin, destination, fare_kobo, active, updated_at) VALUES (?, ?, ?, ?, 1, ?)",
+  const routeIds: number[] = [];
+  for (const r of DEMO_ROUTES) {
+    const { id } = await db.one<{ id: number }>(
+      `INSERT INTO {schema}.routes (name, origin, destination, fare_kobo, active, updated_at)
+       VALUES ($1, $2, $3, $4, true, $5) RETURNING id`,
+      [r.name, r.origin, r.destination, r.fareNaira * 100, at],
     );
-    const routeIds = DEMO_ROUTES.map(
-      (r) => insertRoute.run(r.name, r.origin, r.destination, r.fareNaira * 100, now).lastInsertRowid,
-    );
-    const insertVehicle = db.prepare("INSERT INTO vehicles (name, route_id) VALUES (?, ?)");
-    for (const [name, routeIndex] of DEMO_VEHICLES) {
-      insertVehicle.run(name, routeIndex === null ? null : routeIds[routeIndex]);
-    }
-    db.exec("COMMIT");
-  } catch (err) {
-    db.exec("ROLLBACK");
-    throw err;
+    routeIds.push(id);
+  }
+  for (const [name, routeIndex] of DEMO_VEHICLES) {
+    await db.query("INSERT INTO {schema}.vehicles (name, route_id) VALUES ($1, $2) ON CONFLICT (name) DO NOTHING", [
+      name,
+      routeIndex === null ? null : routeIds[routeIndex],
+    ]);
   }
 }
