@@ -24,16 +24,17 @@ Working now:
 - **My tickets.** Active, used and expired or refunded tickets, with a live countdown and a full-screen QR view.
 - **Conductor screen.** Choose the vehicle, then scan the QR with the phone camera or type the backup code. Large, high-contrast result screens read at a glance: **VALID**, **ALREADY USED at 10:42 on Bus 3**, **EXPIRED**, **WRONG ROUTE** and **INVALID**. Each result also has its own vibration pattern.
 - **Admin dashboard.** Sales and redemption totals, a per-route table, a ticket list filtered by status, route and search, refunds of unused tickets, a fraud log, route and fare management, wallet credits and vehicle-to-route assignment.
-- **Security basics.** Rate limits on sign-in and verification. A fraud log of invalid signatures, unknown codes, reuse attempts, expired or refunded tickets, wrong-route scans and rate-limit hits. Cross-site write protection. Atomic, race-safe purchases and redemptions.
+- **Security basics.** Rate limits on sign-in and verification, stored in the database so every server instance shares them. A fraud log of invalid signatures, unknown codes, reuse attempts, expired or refunded tickets, wrong-route scans and rate-limit hits. Cross-site write protection. Atomic, race-safe purchases, refunds and redemptions.
+- **PostgreSQL storage, ready for testers.** In production the app uses a hosted Postgres database (Supabase), shared with the group's other two apps, with this app's tables in their own `sctpstvs` schema. Locally and in tests it runs the same SQL on PGlite, an in-process Postgres, so no database server is needed. Several server instances, or serverless functions, can run at once: no state lives in local files or memory.
 - **Accessible, mobile-first UI.** Semantic HTML, labelled fields, visible focus, keyboard-operable tabs, live regions for results, light and dark themes, and layouts that work at phone width. It uses the Atkinson Hyperlegible font, with a mono cut that keeps 0/O and 1/I distinct in backup codes.
 
 ## Status
 
-The MVP is complete: everything in the brief works end to end on a local server. See [Limitations](#limitations) for what a real deployment would still need.
+The MVP is complete: everything in the brief works end to end. Storage now runs on PostgreSQL, so the app can be deployed for testers on Supabase plus any Node host or Vercel (see [Deploying](#deploying)). See [Limitations](#limitations) for what a real launch would still need.
 
 ## How to run
 
-You need **Node.js 22.13 or later**, because the app uses the built-in `node:sqlite` module and needs no native build. Node prints an `ExperimentalWarning` for SQLite; this is expected.
+You need **Node.js 20.9 or later** (22 LTS recommended). Local development needs no database server.
 
 ```bash
 cd sctpstvs
@@ -44,30 +45,52 @@ npm run dev            # http://localhost:3000
 Other commands:
 
 ```bash
-npm test               # Vitest unit tests
+npm test               # Vitest tests (in-memory Postgres via PGlite)
 npx tsc --noEmit       # type check
 npx eslint src         # lint
-npm run build && npm start   # production build and server
+npm run gen-key        # print a new ticket signing key for production
+npm run build && npm start   # production build and server (needs SIGNING_PRIVATE_KEY)
 ```
 
-On first run the app creates `data/`, which holds:
+### Local development and production
 
-- `data/sctpstvs.db`: the SQLite database, seeded with the demo accounts, routes and vehicles below;
-- `data/keys/ticket-signing-key.pem`: the Ed25519 private key (file mode 0600), plus the public key.
+| | Local (`npm run dev`, `npm test`) | Production |
+| --- | --- | --- |
+| Database | PGlite, Postgres compiled to WebAssembly and run inside the Node process. `npm run dev` keeps it in `data/pglite/`; tests use a fresh in-memory copy for each test. | Postgres at `DATABASE_URL`: for the group, one Supabase database shared by all three apps. |
+| Tables | Schema `sctpstvs` (or `DATABASE_SCHEMA`) | The same |
+| Signing key | Generated on first run into `data/keys/ticket-signing-key.pem` (file mode 0600) | `SIGNING_PRIVATE_KEY`. Without it, ticket routes fail with a clear message and the server logs it at start-up. |
 
-`data/` is git-ignored, and the key must never be committed. Delete `data/` to start again with fresh demo data and a new key. (Old tickets then stop verifying, which is correct.)
+On first use the app creates the schema, tables, indexes and triggers if they are missing, then seeds the demo accounts, routes and vehicles below into an empty database. This runs once per server process, in one transaction under a Postgres advisory lock, so two instances starting together cannot both seed.
 
-Settings (environment variables, all optional):
+`data/` is git-ignored, and keys must never be committed. Delete `data/` to start again locally with fresh demo data and a new key. (Old tickets then stop verifying, which is correct.)
+
+### Environment variables
+
+All are optional for local development. Copy [`.env.example`](.env.example) for the list; it holds placeholders only.
 
 | Variable | Default | Meaning |
 | --- | --- | --- |
+| `DATABASE_URL` | none: PGlite in `data/pglite/` | Postgres connection string. In production, Supabase's **Transaction pooler** URL (port 6543), e.g. `postgresql://postgres.<project-ref>:<password>@aws-0-<region>.pooler.supabase.com:6543/postgres`. TLS is required unless the host is `localhost` or the URL has `sslmode=disable`. |
+| `DATABASE_SCHEMA` | `sctpstvs` | Schema that holds this app's tables. The group's apps share one database, each in its own schema. |
+| `SIGNING_PRIVATE_KEY` | dev: generated into `data/keys/`; **required in production** | Ed25519 private key that signs tickets, as PKCS8 PEM or that PEM base64-encoded on one line (what `npm run gen-key` prints, because env-var editors often break newlines). It is never stored in the database. |
 | `TICKET_TTL_MINUTES` | `120` | How long a ticket is valid after purchase |
-| `SCT_DATA_DIR` | `./data` | Where the database and keys live |
-| `SCT_DB_FILE` | `$SCT_DATA_DIR/sctpstvs.db` | Database file (`:memory:` is used by tests) |
+| `SCT_DATA_DIR` | `./data` | Where local-only data lives (PGlite files and the dev key) |
 
 ### Using the camera on a phone
 
 Browsers only allow the camera on HTTPS pages or on `localhost`. To test scanning from a phone on the same Wi-Fi, run `npx next dev --experimental-https` and open the `https://<your-computer's-IP>:3000` address on the phone, accepting the self-signed certificate warning. Without the camera, the conductor can always type the backup code.
+
+## Deploying
+
+The app is a standard Next.js server, so it runs on any Node host (Render, Railway, Fly.io, a VPS) or on Vercel. The group uses **one Supabase Postgres database for all three apps**; each app keeps its tables in its own schema (`aacnras`, `sctpstvs`, `ppclfmvrs`), so they never collide.
+
+1. **Database.** In Supabase, open **Project Settings → Database → Connection string → Transaction pooler** and copy the URL (port 6543). Put in the database password. The app connects with `prepare: false`, which the transaction pooler needs, uses TLS, and keeps at most 5 connections per server instance.
+2. **Signing key.** Run `npm run gen-key` and copy the printed `SIGNING_PRIVATE_KEY=…` value. Keep it secret: anyone holding it can mint tickets. Changing it later invalidates every unused ticket.
+3. **Environment.** In your host's settings, set `DATABASE_URL` and `SIGNING_PRIVATE_KEY` (and `DATABASE_SCHEMA` only if you want a schema other than `sctpstvs`). Set `NODE_ENV=production` if your host does not already.
+4. **Build and start.** On a Node host, use `npm install && npm run build` as the build command and `npm start` as the start command, with the project root set to `sctpstvs/`. On Vercel, import the repository, set the root directory to `sctpstvs`, add the environment variables and deploy; no other settings are needed.
+5. **First request.** The first request creates the `sctpstvs` schema, tables and triggers and seeds the demo data. Sign in with the demo accounts below, then change or remove them before real testers use the app.
+
+Supabase only exposes the `public` schema through its auto-generated REST API (PostgREST). Keeping our tables in `sctpstvs` keeps them off that API, so the only way in is through this app's own server-side checks. Don't add `sctpstvs` to the API's exposed schemas.
 
 ## Demo accounts
 
@@ -114,11 +137,12 @@ Changing any character of the payload or the signature makes verification fail. 
 A valid signature only proves that the server issued the ticket. Whether it is still unused lives in the database. The final step of a verification is one conditional update:
 
 ```sql
-UPDATE tickets SET status = 'redeemed', redeemed_at = ?, redeemed_by = ?, redeemed_vehicle = ?
-WHERE id = ? AND status = 'active' AND expires_at > ?
+UPDATE sctpstvs.tickets SET status = 'redeemed', redeemed_at = $1, redeemed_by = $2, redeemed_vehicle = $3
+WHERE id = $4 AND status = 'active' AND expires_at > $1
+RETURNING id
 ```
 
-SQLite applies this atomically. If two conductors scan the same ticket at the same instant, from the same server or from two processes, exactly one update changes a row and gets **VALID**. The other sees zero changed rows and gets **ALREADY USED**, with the time, vehicle and conductor of the first scan. Every reuse attempt is logged.
+Postgres locks the ticket row while it updates it. A second update of the same row waits for the first to commit, then re-checks the `WHERE` clause against the committed row; `status` is no longer `'active'`, so it changes nothing. If two conductors scan the same ticket at the same instant, on the same server or on different ones, exactly one update returns a row and gets **VALID**. The other gets no row and shows **ALREADY USED**, with the time, vehicle and conductor of the first scan. Every reuse attempt is logged.
 
 ### 3. Expiry
 
@@ -131,12 +155,13 @@ The 10-character code (for example `SW7H3-ANCH4`) uses Crockford base32. There a
 ### 5. Money
 
 - The client only ever sends a **route ID**. The fare comes from the `routes` table at purchase time, and the ticket records the fare actually paid.
-- The balance check, the ledger debit and the ticket insert run in **one `BEGIN IMMEDIATE` transaction**, which takes SQLite's write lock. Ten simultaneous purchases on a wallet that can afford one produce exactly one ticket (this is tested).
-- The ledger is **append-only**: database triggers reject `UPDATE` and `DELETE`. A trigger also rejects any row that would take a balance below zero. A `CHECK` constraint keeps purchases negative and top-ups and refunds positive.
+- The balance check, the ledger debit and the ticket insert run in **one transaction that first locks the buyer's `users` row** (`SELECT … FOR NO KEY UPDATE`). Any other purchase, top-up or refund for the same wallet waits for that lock, on any server instance. Ten simultaneous purchases on a wallet that can afford one produce exactly one ticket (this is tested against a real Postgres server, not only PGlite).
+- The ledger is **append-only**: PL/pgSQL triggers reject `UPDATE`, `DELETE` and `TRUNCATE`. Another trigger locks the owner's row and rejects any row that would take a balance below zero, so even concurrent direct `INSERT`s cannot overdraw a wallet. A `CHECK` constraint keeps purchases negative and top-ups and refunds positive. Amounts are `bigint` kobo.
+- A refund locks the ticket row (`SELECT … FOR UPDATE`), so two admins clicking at once refund it only once.
 
 ### 6. Other protections
 
-- **Rate limits:** 5 sign-in attempts per account and 30 per IP address per 15 minutes, and 30 verifications per conductor per minute. The first refusal in each window is written to the fraud log.
+- **Rate limits:** 5 sign-in attempts per account and 30 per IP address per 15 minutes, and 30 verifications per conductor per minute. The first refusal in each window is written to the fraud log. Counters are rows in the `rate_limit_hits` table (a sliding window), checked under a per-key advisory lock, so all server instances share them.
 - **Sessions:** a random 256-bit token in an httpOnly, SameSite=Lax cookie (Secure in production). It expires after 12 hours, and sign-out deletes it on the server.
 - **Timing:** a sign-in with an unknown number still runs scrypt, so response times don't reveal which numbers exist.
 - **Cross-site writes:** requests with an `Origin` header from another site are refused with 403.
@@ -174,12 +199,21 @@ All bodies are JSON. Amounts are returned in **kobo** (₦1 = 100 kobo) and acce
 
 ## Tests
 
-`npm test` runs 32 Vitest tests in four files:
+`npm test` runs 35 Vitest tests in four files. By default each test gets a fresh in-memory PGlite database, so the suite runs offline with no Postgres server.
 
 - `src/lib/server/tokens.test.ts`: signing and verification, edited payload or signature rejected, wrong key rejected, malformed input, backup code format and normalisation.
-- `src/lib/server/tickets.test.ts`: the fare comes from the route, insufficient funds, ten concurrent purchases on a one-ticket balance, the ledger never going negative (even with a direct insert), the ledger being append-only, single use with the "ALREADY USED at 10:42 on Bus 3" message, the backup code, expiry, tampered, forged and unknown codes (and their fraud log entries), wrong route, twenty simultaneous scans with exactly one VALID, two separate database connections racing to redeem, and refunds.
-- `src/lib/server/auth.test.ts`: scrypt hashing, sign-in, session expiry and revocation, and the rate limiter.
+- `src/lib/server/tickets.test.ts`: the fare comes from the route, insufficient funds, ten concurrent purchases on a one-ticket balance, the ledger never going negative (even with direct inserts, including ten concurrent ones), the ledger being append-only (no update, delete or truncate), single use with the "ALREADY USED at 10:42 on Bus 3" message, the backup code, expiry, tampered, forged and unknown codes (and their fraud log entries), wrong route, twenty simultaneous scans with exactly one VALID, two separate database connections racing to redeem, and refunds (including three admins racing to refund one ticket).
+- `src/lib/server/auth.test.ts`: scrypt hashing, case-insensitive sign-in, session expiry and revocation (and that only a hash of the token is stored), and the database-backed rate limiter, including a burst of concurrent requests.
 - `src/app/api/tickets/route.test.ts`: calls the real route handler with `fareKobo: 1` in the body and checks the full server fare is charged. It also checks sign-in and role rules and the cross-site block, and that an issued ticket verifies exactly once through `/api/verify`.
+
+**Against a real Postgres server.** PGlite runs one query at a time, so it cannot show real races. Set `DATABASE_URL` and the same suite runs on that server instead: each test gets its own throwaway `sct_test_…` schema (dropped at the end of the run) and a pool of 10 connections, so the concurrency tests race for real. For example, with a local Postgres:
+
+```bash
+createdb sctpstvs_test
+DATABASE_URL=postgres://localhost/sctpstvs_test npm test
+```
+
+Use a scratch database, never the shared production one.
 
 ## Project layout
 
@@ -191,7 +225,9 @@ src/
   lib/client/             browser helpers: API fetch, shared clock, localStorage setting
   lib/server/             server-only: database, seed, keys, tokens, tickets, wallet,
                           catalog (routes, vehicles), auth, rate limit, fraud log, stats
-data/                     runtime database and signing key (git-ignored)
+scripts/gen-key.mjs       prints a new SIGNING_PRIVATE_KEY (npm run gen-key)
+data/                     local PGlite database and dev signing key (git-ignored)
+.env.example              environment variables, placeholders only
 ```
 
 ## Limitations
@@ -199,9 +235,9 @@ data/                     runtime database and signing key (git-ignored)
 - **No real payments.** Top-ups are demo credits. A real system would credit the wallet only after a payment provider confirms the payment through a signed webhook. Admin credits stand in for cash paid at an office.
 - **Fares, routes and vehicles are invented** for the demo and are not OAU's real ones.
 - **Verification needs the server.** The QR signature could be checked offline with the public key, but single use needs the central database. An offline scanner would have to sync and accept a small risk of reuse.
-- **One server.** SQLite and the in-memory rate limiter suit a single server. Several instances would need a shared database (for example PostgreSQL, using the same conditional `UPDATE`) and a shared rate-limit store.
+- **Demo accounts are seeded into production too.** Change their passwords or remove them before real testers use a deployment.
 - **Rate limits are keyed by IP address and account.** Behind a proxy, `x-forwarded-for` must be set by a trusted proxy.
-- **One signing key and no rotation UI.** The `kid` field allows rotation later. Losing the key file invalidates all outstanding tickets.
+- **One signing key and no rotation UI.** The `kid` field allows rotation later. Losing or changing `SIGNING_PRIVATE_KEY` invalidates all outstanding tickets.
 - **No self-registration or password reset.** Accounts are seeded. A real deployment would link to the university's student records.
 - **A screenshot of a QR still works once.** A student can pass their ticket to a friend before it is used. That is allowed (it was paid for), but it can only be used once.
 - The camera scanner needs HTTPS (or localhost), and headless testing could not exercise a real camera. Scanning was tested with typed codes and through the same `/api/verify` endpoint the scanner calls.
