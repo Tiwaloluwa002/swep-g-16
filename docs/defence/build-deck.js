@@ -563,9 +563,9 @@ pres.addSection({ title: "Conclusion" });
 {
   const s = content("Our team and project links", "Conclusion");
   const head = (t) => ({ text: t, options: { bold: true, color: HEX.lt1, fill: { color: HEX.dk2 } } });
-  const rows = group.members.map((m) => [m.name, m.matric, m.department, m.linkedin || "—"]);
-  s.addTable([[head("Name"), head("Matric number"), head("Department"), head("LinkedIn")], ...rows], {
-    x: 0.5, y: 1.2, w: 9, colW: [2.9, 1.7, 2.9, 1.5], fontFace: "Calibri", fontSize: 12, color: HEX.dk1, border: { type: "solid", pt: 0.75, color: "C9D3CD" }, rowH: 0.42, valign: "middle",
+  const rows = group.members.map((m) => [m.name, m.matric, m.department]);
+  s.addTable([[head("Name"), head("Matric number"), head("Department")], ...rows], {
+    x: 0.5, y: 1.2, w: 9, colW: [3.4, 2.3, 3.3], fontFace: "Calibri", fontSize: 12, color: HEX.dk1, border: { type: "solid", pt: 0.75, color: "C9D3CD" }, rowH: 0.42, valign: "middle",
   });
   text(s, [
     { text: "Source code, guide and full history: ", options: { bold: true } },

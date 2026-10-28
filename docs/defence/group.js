@@ -1,7 +1,7 @@
 // Group details shared by the report and the slides.
 //
 // group.json   — faculty, supervisor, defenceDate (leave "" until confirmed; the documents print a blank), repoUrl
-// members.json — members per project: { "aacnras": [{ name, matric, department, linkedin }], ... }
+// members.json — members per project: { "aacnras": [{ name, matric, department }], ... }
 //                The split was drawn at random; edit the file to move people between projects.
 //                It holds personal details, so git ignores it; copy members.example.json to start one.
 const group = require("./group.json");

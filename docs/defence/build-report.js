@@ -88,7 +88,6 @@ const shot = (name, text) => figure(path.join(SHOTS, name), 470, 294, text);
 // ---------- content ----------
 // Sections start on a new page only where a break helps the reader; short ones run on.
 const S = (text, newPage = true) => new Paragraph({ heading: HeadingLevel.HEADING_1, pageBreakBefore: newPage, children: [new TextRun(text)] });
-const LINE = "________________________";
 
 const memberRows = group.hasMembers
   ? group.members.map((m, i) => [String(i + 1), m.name, m.matric, m.department])
@@ -478,11 +477,9 @@ const s16 = [
   P(`**Source code and documentation:** ${group.repoUrl}`),
   P("The repository contains the full code, the installation and deployment guide, the list of tests, and the history of every change and fix."),
   table(
-    ["S/N", "Name", "Matriculation number", "Department", "LinkedIn"],
-    group.hasMembers
-      ? group.members.map((m, i) => [String(i + 1), m.name, m.matric, m.department, m.linkedin || LINE])
-      : [1, 2, 3, 4, 5].map((n) => [String(n), "", "", "", LINE]),
-    [6, 28, 20, 26, 20],
+    ["S/N", "Name", "Matriculation number", "Department"],
+    memberRows,
+    [7, 38, 25, 30],
   ),
   caption("Table 16.1: Group members"),
 ];
