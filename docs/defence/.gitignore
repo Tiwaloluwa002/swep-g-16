@@ -1,2 +1,4 @@
 node_modules/
 out/
+# Real names and matric numbers stay off the public repo
+members.json

@@ -77,7 +77,9 @@ const card = (slide, x, y, w, h, name, fill = C.background2) =>
 const pill = (slide, x, y, w, label, fill, color) =>
   slide.addText(label, { isTextBox: true, x, y, w, h: 0.3, fontFace: "Calibri", fontSize: 11, bold: true, color, fill: { color: fill }, align: "center", valign: "middle", margin: 0, rectRadius: 0.15, shape: pres.shapes.ROUNDED_RECTANGLE });
 const image = (slide, file, x, y, w, h, alt) =>
-  slide.addImage({ path: path.join(SHOTS, file), x, y, w, h, altText: alt, sizing: { type: "contain", w, h } });
+  slide.addImage({ path: path.isAbsolute(file) ? file : path.join(SHOTS, file), x, y, w, h, altText: alt, sizing: { type: "contain", w, h } });
+let figNo = 0;
+const fig = (textValue) => `Figure ${++figNo}: ${textValue}`;
 // A one-line caption under every image (Dr Solanke: "a really short info on each image").
 const caption = (slide, value, x, y, w) => text(slide, value, { x, y, w, h: 0.25, fontSize: 11, italic: true, color: C.accent5 });
 // Every slide that uses a fact names its source in the same place.
@@ -121,7 +123,7 @@ pres.addSection({ title: "Introduction" });
     { text: "It uses open map data, terrain elevation and an A* route search to find a safer route for each person, and explains every step." },
   ], { x: 0.5, y: 1.25, w: 3.9, h: 3.5, fontSize: 15, paraSpaceAfter: 12 });
   image(s, "route-planner.png", 4.7, 1.25, 4.8, 3.0, "The AACNRAS route planner");
-  caption(s, "Figure 1: The route planner, routing from the SUB to the library.", 4.7, 4.32, 4.8);
+  caption(s, fig("The route planner, routing from the SUB to the library."), 4.7, 4.32, 4.8);
   source(s, "World Health Organization (2022), Global report on health equity for persons with disabilities.");
   s.addNotes("In short: AACNRAS plans routes across campus for the way each person moves. The World Health Organization estimates 1.3 billion people, about 16 percent of the world, live with a significant disability. On a hilly campus like ours, the usual route can be impossible for some of them. Our app uses open map data, terrain elevation and an A star search to find a better route for each person.");
 }
@@ -144,6 +146,28 @@ pres.addSection({ title: "Introduction" });
   text(s, "General map apps give everyone the same route. They don’t know where the steps are, how steep a road is, or whether a ramp is blocked.", { x: 0.5, y: 4.3, w: 9, h: 0.55, fontSize: 15, italic: true, color: C.text2 });
   source(s, "AACNRAS route analysis of OpenStreetMap data (2026).");
   s.addNotes("For most of us, any route works. But for a wheelchair user, the normal route from Moremi Hall to the Senate Building includes a 51-step staircase. Someone on crutches gets sent up the steepest hill because it is shortest. A visually impaired student gets sent along busy roads with no kerbs or tactile paving. Map apps give everyone the same route.");
+}
+
+// ---------- Implications for the campus ----------
+{
+  const s = content("What AACNRAS changes on campus", "Introduction");
+  const items = [
+    ["Independence", "Students and staff with disabilities move safely without asking for help"],
+    ["Temporary injuries", "Anyone on crutches gets gentle, stair-free routes"],
+    ["Safety after dark", "After-dark mode prefers lit paths for every student"],
+    ["Visitors and freshers", "Clear directions to 79 places, from halls to banks"],
+    ["Maintenance", "Reports show where paths flood or ramps break, so Works can act"],
+    ["Planning", "Six places flagged that may need ramps: a ready list for the university"],
+  ];
+  items.forEach(([head, body], i) => {
+    const x = 0.5 + (i % 3) * 3.05, y = 1.25 + Math.floor(i / 3) * 1.75;
+    card(s, x, y, 2.85, 1.55, `impact-${i + 1}`, i === 5 ? C.text2 : C.background2);
+    const dark = i === 5;
+    text(s, head, { x: x + 0.2, y: y + 0.15, w: 2.45, h: 0.4, fontFace: "Cambria", fontSize: 16, bold: true, color: dark ? C.accent1 : C.text2 });
+    text(s, body, { x: x + 0.2, y: y + 0.6, w: 2.45, h: 0.85, fontSize: 12.5, color: dark ? C.background1 : C.text1 });
+  });
+  source(s, "Federal Republic of Nigeria (2018), Discrimination Against Persons with Disabilities (Prohibition) Act.");
+  s.addNotes("What does this change on campus? Students and staff with disabilities can move independently. Anyone with a temporary injury gets stair-free routes. After-dark mode helps every student at night. Visitors and freshers get clear directions. Obstacle reports tell Works where paths flood or ramps break. And the app has already flagged six places that may need ramps, which supports the university's duty under the 2018 Disability Act.");
 }
 
 // ---------- 4. Aim and objectives ----------
@@ -170,6 +194,27 @@ pres.addSection({ title: "Introduction" });
   s.addNotes("Our aim was to design and build a web app that gives accessible routes and route advice across the OAU campus. We broke that into seven objectives, from modelling the paths as a graph, through the routing and advice, to obstacle reporting and making the app itself accessible.");
 }
 
+// ---------- Features and specifications ----------
+{
+  const s = content("Distinct features and specifications", "Introduction");
+  text(s, [
+    "Four travel profiles", "Best route for the person, not just the shortest", "Warnings at every step",
+    "Elevation chart and route statistics", "Building accessibility details", "Verified obstacle reports",
+    "After-dark mode", "High contrast, large text, read-aloud",
+  ].map((t, i, a) => ({ text: t, options: { bullet: true, breakLine: i < a.length - 1 } })), { x: 0.5, y: 1.25, w: 3.9, h: 3.55, fontSize: 14, paraSpaceAfter: 6 });
+  const head = (t) => ({ text: t, options: { bold: true, color: HEX.lt1, fill: { color: HEX.dk2 } } });
+  s.addTable([
+    [head("Item"), head("Specification")],
+    ["Platform", "Web app, any modern browser"],
+    ["Coverage", "79 places, 577 paths, 78.6 km"],
+    ["Route search", "A*, about 0.1 ms per route"],
+    ["Map data", "OpenStreetMap + terrain model"],
+    ["Storage", "PostgreSQL (Supabase)"],
+    ["Tests", "29 automated, all passing"],
+  ], { x: 4.7, y: 1.25, w: 4.8, colW: [1.5, 3.3], fontFace: "Calibri", fontSize: 12.5, color: HEX.dk1, border: { type: "solid", pt: 0.75, color: "C9D3CD" }, rowH: 0.45, valign: "middle" });
+  s.addNotes("These are the features that make AACNRAS different, and on the right its specifications: a web app covering 79 places and 78.6 kilometres of paths, routing in about a tenth of a millisecond, with 29 automated tests.");
+}
+
 // ---------- 5. Existing solutions ----------
 {
   const s = content("Existing tools cover only part of the problem", "Introduction");
@@ -184,6 +229,25 @@ pres.addSection({ title: "Introduction" });
   ], { x: 0.5, y: 1.3, w: 9, colW: [2.1, 2.0, 1.4, 1.8, 1.7], fontFace: "Calibri", fontSize: 14, color: HEX.dk1, border: { type: "solid", pt: 0.75, color: "C9D3CD" }, rowH: 0.5, valign: "middle" });
   source(s, "Bolten et al. (2017); Sozialhelden e.V., Wheelmap.org; Neis and Zielstra (2014).");
   s.addNotes("We looked at existing tools. AccessMap in Seattle routes by mobility and slope, but only in Seattle. Wheelmap rates places, not routes. Google Maps offers accessible public transport routes, but does not model campus footpaths, steps or slopes. None of them covers OAU with routes, building details and obstacle reports together. That is the gap AACNRAS fills.");
+}
+
+// ---------- Tools and stack ----------
+{
+  const s = content("Tools and technology stack", "Introduction");
+  const tools = [
+    ["Next.js 16 + React 19", "the web app"], ["TypeScript", "type-checked code"], ["Tailwind CSS", "styling and high contrast"],
+    ["Leaflet", "interactive map"], ["OpenStreetMap", "paths and buildings"], ["Open-Meteo", "terrain heights"],
+    ["PostgreSQL / Supabase", "obstacle reports"], ["PGlite", "local database for tests"], ["Vitest", "automated tests"],
+    ["Git + GitHub", "version control"], ["Vercel", "hosting"], ["ESLint", "code quality"],
+  ];
+  tools.forEach(([name, use], i) => {
+    const x = 0.5 + (i % 4) * 2.3, y = 1.25 + Math.floor(i / 4) * 1.15;
+    card(s, x, y, 2.1, 0.98, `tool-${i + 1}`);
+    text(s, name, { x: x + 0.15, y: y + 0.12, w: 1.8, h: 0.4, fontFace: "Cambria", fontSize: 13.5, bold: true, color: C.text2 });
+    text(s, use, { x: x + 0.15, y: y + 0.52, w: 1.8, h: 0.35, fontSize: 11.5 });
+  });
+  source(s, "Tools needed: a computer with Node.js 22+, npm, Git and a web browser; free Supabase and Vercel accounts to deploy.");
+  s.addNotes("This is our stack. The app is built with Next.js, React and TypeScript, styled with Tailwind, and the map uses Leaflet. Map data comes from OpenStreetMap and terrain heights from Open-Meteo. Reports are stored in PostgreSQL on Supabase. To run it you only need Node.js, npm, Git and a browser.");
 }
 
 // ---------- 6. How it works ----------
@@ -211,26 +275,20 @@ pres.addSection({ title: "Design" });
   s.addNotes("We import the campus paths and places from OpenStreetMap, and terrain elevation for slopes. That becomes a graph of 471 junctions and 577 path segments. Each travel profile turns every segment into a cost. The A* search then finds the lowest-cost route, which is not always the shortest. Finally, the route becomes directions, warnings and route details.");
 }
 
-// ---------- 7. Data in numbers ----------
+// ---------- System architecture ----------
 {
-  const s = content("The OAU campus, in numbers", "Design");
-  const stats = [["79", "campus places"], ["577", "path segments"], ["78.6", "km of mapped paths"], ["2,414", "elevation points"]];
-  stats.forEach(([big, label], i) => {
-    const x = 0.5 + i * 2.3;
-    card(s, x, 1.35, 2.1, 1.95, `stat-${i + 1}`);
-    text(s, big, { x: x + 0.15, y: 1.6, w: 1.8, h: 0.9, fontFace: "Cambria", fontSize: 40, bold: true, color: C.text2, align: "center", valign: "middle" });
-    text(s, label, { x: x + 0.15, y: 2.55, w: 1.8, h: 0.4, fontSize: 15, color: C.text1, align: "center" });
-  });
+  const s = content("System architecture", "Design");
+  image(s, path.join(__dirname, "assets", "architecture.png"), 0.5, 1.15, 5.3, 3.65, "System architecture diagram");
+  caption(s, fig("Data is prepared offline; routes are computed in the browser."), 0.5, 4.88, 5.3);
   text(s, [
-    { text: "Paths and places: ", options: { bold: true } },
-    { text: "OpenStreetMap, imported automatically.", options: { breakLine: true } },
-    { text: "Slopes: ", options: { bold: true } },
-    { text: "estimated from the Copernicus 90 m terrain model.", options: { breakLine: true } },
-    { text: "Building accessibility: ", options: { bold: true } },
-    { text: "to be filled in by our on-site survey." },
-  ], { x: 0.5, y: 3.55, w: 9, h: 1.1, fontSize: 14, paraSpaceAfter: 4 });
-  source(s, "OpenStreetMap contributors (2026); European Space Agency, Copernicus DEM GLO-90, via Open-Meteo.");
-  s.addNotes("The system covers 79 campus places and 577 path segments, about 78.6 kilometres of paths. We sampled the terrain elevation at 2,414 points to estimate slopes. Paths and places come from OpenStreetMap. Building accessibility details such as ramps and lifts will come from our on-site survey.");
+    { text: "Data preparation: ", options: { bold: true } },
+    { text: "an import script fetches paths, places and terrain heights.", options: { breakLine: true } },
+    { text: "In the browser: ", options: { bold: true } },
+    { text: "the A* engine finds routes instantly on the user’s device.", options: { breakLine: true } },
+    { text: "On the server: ", options: { bold: true } },
+    { text: "only obstacle reports and admin actions, stored in PostgreSQL." },
+  ], { x: 6.1, y: 1.25, w: 3.4, h: 3.6, fontSize: 13.5, paraSpaceAfter: 10 });
+  s.addNotes("This is the system architecture. An import script prepares the map data from OpenStreetMap and Open-Meteo. Routes are computed in the user's browser, so they are instant and the server is not loaded by routing. The server only handles obstacle reports and admin actions, which are stored in PostgreSQL.");
 }
 
 // ---------- 8. Profiles ----------
@@ -257,25 +315,6 @@ pres.addSection({ title: "Design" });
   s.addNotes("These are the four profiles. Wheelchair users never get steps and never get slopes above 8 percent, which is the 1 in 12 ramp limit from the ADA standards. Visually impaired users avoid steps and busy roads. Limited mobility users get gentle slopes and smooth ground.");
 }
 
-// ---------- 9. Cost function ----------
-{
-  const s = content("A different cost for each person", "Design");
-  card(s, 0.5, 1.3, 9, 1.05, "formula-card", C.text2);
-  text(s, "cost = (length ÷ speed) × slope × surface × kerbs × tactile × traffic × light  +  steps", { x: 0.7, y: 1.45, w: 8.6, h: 0.75, fontFace: "Cambria", fontSize: 18, color: C.background1, align: "center", valign: "middle" });
-  const points = [
-    ["Rule out", "Steps for wheelchair users; slopes above a profile’s limit."],
-    ["Penalise", "Unpaved ground costs a wheelchair user 4×, a walker 1.2×."],
-    ["Search", "A* expands the cheapest junction first, guided by straight-line distance, so the route it returns is the lowest-cost one."],
-  ];
-  points.forEach(([head, body], i) => {
-    const x = 0.5 + i * 3.1;
-    text(s, head, { x, y: 2.65, w: 2.8, h: 0.4, fontFace: "Cambria", fontSize: 17, bold: true, color: C.accent2 });
-    text(s, body, { x, y: 3.1, w: 2.8, h: 1.5, fontSize: 14 });
-  });
-  source(s, "Hart, Nilsson and Raphael (1968), A formal basis for the heuristic determination of minimum cost paths.");
-  s.addNotes("Lowest cost does not have to mean shortest. Every segment gets a cost: its walking time, multiplied by penalties for slope, surface, kerbs, tactile paving, traffic and lighting, plus a cost for steps. Some segments are ruled out entirely, like steps for wheelchair users. A star then finds the lowest-cost route, and because its distance estimate never overestimates, that route is guaranteed to be the best one for the profile.");
-}
-
 // ---------- 10–13. The system, each screenshot captioned ----------
 pres.addSection({ title: "The system" });
 const screenSlide = (title, file, alt, figure, side, notes) => {
@@ -287,7 +326,7 @@ const screenSlide = (title, file, alt, figure, side, notes) => {
   return s;
 };
 screenSlide("Plan a route", "route-planner.png", "Route planner showing a route from the Student Union Building to the library",
-  "Figure 2: Route planner. Solid blue is the route; dotted blue is not yet mapped.",
+  fig("Route planner. Solid blue is the route; dotted blue is not yet mapped."),
   [
     { text: "1  Choose how you travel", options: { bold: true, breakLine: true } },
     { text: "2  Pick start and destination, or tap the map", options: { bold: true, breakLine: true } },
@@ -296,7 +335,7 @@ screenSlide("Plan a route", "route-planner.png", "Route planner showing a route 
   ],
   "You choose how you travel, pick a start and a destination, and the route appears on the map. Dotted blue is a short stretch not yet on the map, and the directions say so. [Switch to the live demo here if possible.]");
 screenSlide("Directions, warnings and route details", "route-details.png", "Directions with warnings, and route details with an elevation profile",
-  "Figure 3: Directions with warnings, and the elevation profile for the route.",
+  fig("Directions with warnings, and the elevation profile for the route."),
   [
     { text: "Every step carries its warnings: ", options: { bold: true } },
     { text: "steps, slopes, rough ground, unlit paths, reports.", options: { breakLine: true } },
@@ -317,11 +356,34 @@ screenSlide("Directions, warnings and route details", "route-details.png", "Dire
     text(s, body, { x: 0.7, y: y + 0.48, w: 3.0, h: 0.5, fontSize: 12, color: dark ? C.background1 : C.text1 });
   });
   image(s, "report-obstacle.png", 4.2, 1.15, 5.3, 3.31, "Report an obstacle form");
-  caption(s, "Figure 4: Reporting an obstacle by nearest building or exact spot.", 4.2, 4.52, 5.3);
+  caption(s, fig("Reporting an obstacle by nearest building or exact spot."), 4.2, 4.52, 5.3);
   s.addNotes("Campus conditions change: flooding, construction, a broken lift. Anyone can report an obstacle by picking the nearest building or the exact spot on the map. It shows as a warning straight away. Once an admin verifies it, routes avoid that path until it is resolved.");
 }
+screenSlide("Look up a building", "building-details.png", "Building card for the library with an unverified flooding report",
+  fig("Building card: accessibility, reports and nearby places."),
+  [
+    { text: "Every building has a card: ", options: { bold: true } },
+    { text: "step-free entrance, ramp, lift and toilet.", options: { breakLine: true } },
+    { text: "Live reports ", options: { bold: true } },
+    { text: "such as flooding appear on the card.", options: { breakLine: true } },
+    { text: "Nearby places ", options: { bold: true } },
+    { text: "and links to Google Maps and OpenStreetMap." },
+  ],
+  "Every building has a card with its accessibility features, any reported problems, nearby places, and links to Google Maps and OpenStreetMap. Features not yet surveyed say so honestly.");
+screenSlide("Review reports (admin)", "admin-dashboard.png", "Admin dashboard with two reports awaiting review",
+  fig("Admin dashboard: verify, reject or resolve each report."),
+  [
+    { text: "Passcode-protected ", options: { bold: true } },
+    { text: "dashboard at /admin.", options: { breakLine: true } },
+    { text: "Verify ", options: { bold: true } },
+    { text: "a blocked path and routes avoid it.", options: { breakLine: true } },
+    { text: "Resolve ", options: { bold: true } },
+    { text: "it when the obstacle is cleared." },
+  ],
+  "Admins review reports on a passcode-protected dashboard. Verifying a blocked path removes it from routing; resolving it puts the path back.");
+
 screenSlide("The app itself is accessible", "wheelchair-high-contrast.png", "Wheelchair profile in high-contrast mode with large text",
-  "Figure 5: Wheelchair profile in high-contrast mode with large text.",
+  fig("Wheelchair profile in high-contrast mode with large text."),
   [
     { text: "High contrast ", options: { bold: true } },
     { text: "and three text sizes", options: { breakLine: true } },
@@ -333,6 +395,47 @@ screenSlide("The app itself is accessible", "wheelchair-high-contrast.png", "Whe
     { text: "typeface for low vision (Braille Institute, 2019)" },
   ],
   "An accessibility app has to be accessible itself. It has a high-contrast mode and three text sizes, shown here with the wheelchair profile. Directions can be read aloud, everything works with a keyboard and screen reader, and the text uses Atkinson Hyperlegible, a typeface designed for low-vision readers.");
+
+// ---------- App life cycle ----------
+pres.addSection({ title: "Life cycle" });
+{
+  const s = content("App life cycle", "Life cycle");
+  const stages = [
+    ["Plan", "22 Oct"], ["Design", "22 Oct"], ["Build engine", "22 Oct"], ["Real OAU data", "23 Oct"], ["Build interface", "23 Oct"],
+    ["Test and fix", "23 Oct"], ["Document", "23–26 Oct"], ["Production database", "27 Oct"], ["Deploy", "Next"], ["Maintain", "Ongoing"],
+  ];
+  s.addShape(pres.shapes.LINE, { x: 0.7, y: 2.05, w: 8.6, h: 0, line: { color: C.accent5, width: 1.5 }, objectName: "timeline" });
+  stages.forEach(([name, when], i) => {
+    const x = 0.5 + (i % 5) * 1.83, y = i < 5 ? 1.25 : 3.0;
+    if (i === 5) s.addShape(pres.shapes.LINE, { x: 0.7, y: 3.8, w: 8.6, h: 0, line: { color: C.accent5, width: 1.5 }, objectName: "timeline-2" });
+    const done = i < 8;
+    s.addShape(pres.shapes.OVAL, { x: x + 0.62, y: y + 0.62, w: 0.36, h: 0.36, fill: { color: done ? C.accent2 : C.background1 }, line: { color: C.accent2, width: 1.5 }, objectName: `stage-${i + 1}` });
+    text(s, String(i + 1), { x: x + 0.62, y: y + 0.62, w: 0.36, h: 0.36, fontSize: 11, bold: true, color: done ? C.background1 : C.accent2, align: "center", valign: "middle" });
+    text(s, name, { x, y: y + 1.05, w: 1.6, h: 0.35, fontSize: 12.5, bold: true, color: C.text2, align: "center" });
+    text(s, when, { x, y: y + 1.38, w: 1.6, h: 0.3, fontSize: 11, color: C.accent5, align: "center" });
+  });
+  text(s, "Route request: profile + places → A* in the browser → directions → map.   Report: sent → awaiting review → verified, rejected or resolved.", { x: 0.5, y: 4.75, w: 9, h: 0.4, fontSize: 12, italic: true, color: C.text2 });
+  s.addNotes("This is the life cycle. We planned and designed on 22 October, built the routing engine, imported the real OAU data and built the interface on the 23rd, tested and fixed faults the same day, documented the work, and moved to a production database on the 27th. Deployment and maintenance come next. At run time, a route request stays in the browser; a report goes from awaiting review to verified, rejected or resolved.");
+}
+{
+  const s = content("What the system can handle", "Life cycle");
+  const stats = [["79", "places to route between"], ["78.6 km", "of campus paths"], ["6,162", "trips tested per profile"], ["0.1 ms", "to compute a route"]];
+  stats.forEach(([big, label], i) => {
+    const x = 0.5 + i * 2.3;
+    card(s, x, 1.25, 2.1, 1.85, `capacity-${i + 1}`);
+    text(s, big, { x: x + 0.1, y: 1.45, w: 1.9, h: 0.85, fontFace: "Cambria", fontSize: 32, bold: true, color: C.text2, align: "center", valign: "middle" });
+    text(s, label, { x: x + 0.1, y: 2.35, w: 1.9, h: 0.6, fontSize: 13, align: "center" });
+  });
+  text(s, [
+    { text: "No server work per route: ", options: { bold: true } },
+    { text: "routing runs on each user’s device, so more users do not slow the server.", options: { breakLine: true } },
+    { text: "One small database row per report; ", options: { bold: true } },
+    { text: "free Supabase and Vercel tiers cover a campus pilot.", options: { breakLine: true } },
+    { text: "Works on phones, tablets and computers; ", options: { bold: true } },
+    { text: "the map needs an internet connection." },
+  ], { x: 0.5, y: 3.35, w: 9, h: 1.45, fontSize: 13.5, paraSpaceAfter: 6 });
+  s.addNotes("What can it handle? 79 places, 78.6 kilometres of paths, and every one of the 6,162 trips for each profile. A route takes a tenth of a millisecond, on the user's own device, so more users don't slow the server. Each report is one small database row.");
+}
 
 // ---------- 14. Results chart ----------
 pres.addSection({ title: "Results" });
@@ -347,14 +450,14 @@ pres.addSection({ title: "Results" });
     valGridLine: { style: "none" }, catGridLine: { style: "none" },
     showLegend: false, showTitle: true, title: "Share of 6,162 place-to-place trips with a route", titleFontSize: 13, titleColor: HEX.dk1, titleFontFace: "+mn-lt",
   });
-  caption(s, "Figure 6: Every route between the 79 places, computed for each profile.", 0.5, 4.62, 5.8);
+  caption(s, fig("Every route between the 79 places, computed for each profile."), 0.5, 4.62, 5.8);
   card(s, 6.6, 1.25, 2.9, 3.55, "results-note");
   text(s, "0.1 ms", { x: 6.8, y: 1.45, w: 2.5, h: 0.6, fontFace: "Cambria", fontSize: 30, bold: true, color: C.text2 });
   text(s, "to compute a route", { x: 6.8, y: 2.05, w: 2.5, h: 0.35, fontSize: 13 });
-  text(s, "25 / 25", { x: 6.8, y: 2.6, w: 2.5, h: 0.6, fontFace: "Cambria", fontSize: 30, bold: true, color: C.text2 });
+  text(s, "29 / 29", { x: 6.8, y: 2.6, w: 2.5, h: 0.6, fontFace: "Cambria", fontSize: 30, bold: true, color: C.text2 });
   text(s, "automated tests pass", { x: 6.8, y: 3.2, w: 2.5, h: 0.35, fontSize: 13 });
   text(s, "Wheelchair routes never used steps or slopes above 8%.", { x: 6.8, y: 3.75, w: 2.5, h: 0.9, fontSize: 13, italic: true, color: C.text2 });
-  s.addNotes("We tested every place-to-place trip: 6,162 of them. Standard walking and visually impaired users get a route for all of them. Limited mobility users for 93 percent, and wheelchair users for 85 percent. Each route takes about a tenth of a millisecond, all 25 automated tests pass, and wheelchair routes never used steps or slopes over 8 percent.");
+  s.addNotes("We tested every place-to-place trip: 6,162 of them. Standard walking and visually impaired users get a route for all of them. Limited mobility users for 93 percent, and wheelchair users for 85 percent. Each route takes about a tenth of a millisecond, all 29 automated tests pass, and wheelchair routes never used steps or slopes over 8 percent.");
 }
 
 // ---------- 15. Key finding ----------
@@ -374,34 +477,11 @@ pres.addSection({ title: "Results" });
   s.addNotes("The most important finding is these six places. Every mapped road into them is estimated at 9 to 12 percent slope, steeper than a wheelchair ramp is allowed to be. These are estimates from a terrain model, so our survey will check them first. If the slopes are real, they are accessibility barriers the university should know about.");
 }
 
-// ---------- 16. Same trip, different routes ----------
-{
-  const s = content("Moremi Hall to the Senate: two routes", "Results");
-  const cols = [
-    ["Standard walking", [["1,127 m", "distance"], ["15 min", "time"], ["51", "steps"]], C.background2],
-    ["Wheelchair user", [["1,235 m", "distance"], ["24 min", "time"], ["0", "steps"]], C.text2],
-  ];
-  cols.forEach(([name, stats, fill], i) => {
-    const x = 0.5 + i * 4.6;
-    card(s, x, 1.25, 4.4, 2.8, `compare-${i + 1}`, fill);
-    const dark = fill === C.text2;
-    text(s, name, { x: x + 0.3, y: 1.4, w: 3.8, h: 0.45, fontFace: "Cambria", fontSize: 18, bold: true, color: dark ? C.background1 : C.text2 });
-    const colX = [0, 1.6, 2.85], colW = [1.5, 1.15, 0.9];
-    stats.forEach(([big, label], j) => {
-      const sx = x + 0.3 + colX[j];
-      text(s, big, { x: sx, y: 2.2, w: colW[j], h: 0.7, fontFace: "Cambria", fontSize: 24, bold: true, color: dark ? C.accent1 : C.text2 });
-      text(s, label, { x: sx, y: 2.95, w: colW[j], h: 0.35, fontSize: 12, color: dark ? C.background2 : C.text1 });
-    });
-  });
-  text(s, "The wheelchair route goes 108 m further to avoid a 51-step staircase, and the time estimate reflects a slower pace.", { x: 0.5, y: 4.25, w: 9, h: 0.55, fontSize: 15, italic: true, color: C.text2 });
-  s.addNotes("A concrete example. From Moremi Hall to the Senate Building, the standard route is 1,127 metres and climbs a 51-step staircase. The wheelchair route goes 108 metres further on step-free roads, with zero steps. The time estimate also reflects a slower pace: 24 minutes instead of 15.");
-}
-
 // ---------- 17. Testing ----------
 {
   const s = content("How we tested it", "Results");
   card(s, 0.5, 1.25, 4.35, 3.5, "tests-auto");
-  text(s, "25 automated tests", { x: 0.75, y: 1.4, w: 3.9, h: 0.45, fontFace: "Cambria", fontSize: 18, bold: true, color: C.text2 });
+  text(s, "29 automated tests", { x: 0.75, y: 1.4, w: 3.9, h: 0.45, fontFace: "Cambria", fontSize: 18, bold: true, color: C.text2 });
   text(s, [
     "No steps or steep slopes for wheelchairs", "Blocked paths are avoided", "After-dark mode avoids unlit paths",
     "Only verified reports change routes", "Elevation profiles add up both ways", "Every place connected on real OAU data",
@@ -413,7 +493,24 @@ pres.addSection({ title: "Results" });
     "Map collapsed to zero height on phones", "Long names pushed the page off-screen",
     "Blank space below the page on desktop", "Route line turned grey in high contrast",
   ].map((t, i, a) => ({ text: t, options: { bullet: true, breakLine: i < a.length - 1 } })), { x: 5.4, y: 2.35, w: 3.9, h: 2.3, fontSize: 13, paraSpaceAfter: 6 });
-  s.addNotes("We tested in two ways. 25 automated tests check the routing rules on a small test campus where we know the right answers, plus checks on the real OAU data. We also tested on laptops and phones, which found four layout faults that we fixed.");
+  s.addNotes("We tested in two ways. 29 automated tests check the routing rules on a small test campus where we know the right answers, plus checks on the real OAU data. We also tested on laptops and phones, which found four layout faults that we fixed.");
+}
+
+// ---------- Errors found and fixes ----------
+{
+  const s = content("Errors we found and fixed", "Results");
+  const head = (t) => ({ text: t, options: { bold: true, color: HEX.lt1, fill: { color: HEX.dk2 } } });
+  s.addTable([
+    [head("Problem"), head("Fix")],
+    ["Buildings drawn in the wrong places", "Real positions imported from OpenStreetMap"],
+    ["Slopes of up to 54% on gentle roads", "Measure slopes over at least 90 m"],
+    ["Map shrank to zero height on phones", "Fixed map height on small screens"],
+    ["Blank space under the page on desktop", "Layout pinned to the screen"],
+    ["Route line grey in high-contrast mode", "Grey filter on the base map only"],
+    ["Reports lost on online hosts", "Moved to a PostgreSQL database"],
+  ], { x: 0.5, y: 1.2, w: 9, colW: [4.2, 4.8], fontFace: "Calibri", fontSize: 13, color: HEX.dk1, border: { type: "solid", pt: 0.75, color: "C9D3CD" }, rowH: 0.48, valign: "middle" });
+  source(s, `Every fix is a commit in the repository: ${group.repoUrl}`);
+  s.addNotes("Testing found real errors. Buildings were first drawn in estimated places, so we imported real positions. The terrain model gave impossible slopes on short paths, so we measure over at least 90 metres. On phones the map collapsed, on desktop there was blank space, and high contrast greyed out the route; all fixed. Finally, reports would have been lost on online hosts, so we moved them to PostgreSQL.");
 }
 
 // ---------- 18. Limitations and mitigation ----------
@@ -430,6 +527,51 @@ pres.addSection({ title: "Conclusion" });
     ["Routes start at buildings, not GPS", "Add GPS start points in the next version"],
   ], { x: 0.5, y: 1.2, w: 9, colW: [3.4, 5.6], fontFace: "Calibri", fontSize: 13, color: HEX.dk1, border: { type: "solid", pt: 0.75, color: "C9D3CD" }, rowH: 0.52, valign: "middle" });
   s.addNotes("Every limitation has a mitigation. Building accessibility isn't surveyed yet, so the app says 'not surveyed' rather than guessing, and our survey fills it in. Slopes are estimates, so we will measure them on site, starting with the six cut-off places. Missing footpaths are flagged in the directions and we will map them. False reports can't change routes until an admin verifies them. And GPS start points come in the next version.");
+}
+
+// ---------- Installation and deployment ----------
+{
+  const s = content("Installation and deployment", "Conclusion");
+  card(s, 0.5, 1.2, 4.35, 3.55, "install-local");
+  text(s, "Run it locally", { x: 0.75, y: 1.35, w: 3.9, h: 0.4, fontFace: "Cambria", fontSize: 17, bold: true, color: C.text2 });
+  text(s, ["git clone the repository", "cd swep-g-15/aacnras", "npm install", "npm run dev", "npm test"].map((t, i, a) => ({ text: t, options: { breakLine: i < a.length - 1 } })), { x: 0.75, y: 1.85, w: 3.9, h: 2.0, fontFace: "Courier New", fontSize: 13, paraSpaceAfter: 6 });
+  text(s, "No database server needed locally.", { x: 0.75, y: 4.15, w: 3.9, h: 0.4, fontSize: 12, italic: true, color: C.text2 });
+  card(s, 5.15, 1.2, 4.35, 3.55, "install-deploy", C.text2);
+  text(s, "Put it online", { x: 5.4, y: 1.35, w: 3.9, h: 0.4, fontFace: "Cambria", fontSize: 17, bold: true, color: C.accent1 });
+  text(s, [
+    "Create a Supabase project; copy the Transaction pooler link",
+    "Create a Vercel project, Root Directory aacnras",
+    "Set DATABASE_URL and ADMIN_PASSCODE",
+    "Deploy: tables are created automatically",
+  ].map((t, i, a) => ({ text: `${i + 1}.  ${t}`, options: { breakLine: i < a.length - 1 } })), { x: 5.4, y: 1.85, w: 3.9, h: 2.7, fontSize: 13, paraSpaceAfter: 8, color: C.background1 });
+  s.addNotes("Installing it takes five commands: clone, open the folder, npm install, npm run dev, and npm test. No database server is needed locally. To put it online, create a Supabase project, a Vercel project pointing at the aacnras folder, set two settings, and deploy.");
+}
+{
+  const s = content("Implemented and open features", "Conclusion");
+  const columns = [
+    ["Implemented", ["Four profiles and A* routing", "Directions, warnings, read-aloud", "Route details and elevation chart", "79 places with building cards", "Obstacle reports and admin review", "Accessible design", "PostgreSQL storage"], C.background2],
+    ["Open", ["Building survey data (ramps, lifts)", "Measured slopes for six places", "Missing footpaths near buildings", "Start from GPS location", "Live spoken guidance", "Uphill vs downhill costs", "Offline map, Yoruba, admin accounts"], C.text2],
+  ];
+  columns.forEach(([head, items, fill], i) => {
+    const x = 0.5 + i * 4.65, dark = fill === C.text2;
+    card(s, x, 1.2, 4.35, 3.6, `features-${i + 1}`, fill);
+    text(s, head, { x: x + 0.25, y: 1.35, w: 3.9, h: 0.4, fontFace: "Cambria", fontSize: 17, bold: true, color: dark ? C.accent1 : C.text2 });
+    text(s, items.map((t, j) => ({ text: t, options: { bullet: true, breakLine: j < items.length - 1 } })), { x: x + 0.25, y: 1.85, w: 3.9, h: 2.85, fontSize: 13, paraSpaceAfter: 5, color: dark ? C.background1 : C.text1 });
+  });
+  s.addNotes("On the left is everything implemented. On the right are the open items: the survey data, measured slopes for the six places, missing footpaths, and features for the next version such as GPS start, live guidance, uphill versus downhill costs, an offline map, Yoruba and individual admin accounts.");
+}
+{
+  const s = content("Our team and project links", "Conclusion");
+  const head = (t) => ({ text: t, options: { bold: true, color: HEX.lt1, fill: { color: HEX.dk2 } } });
+  const rows = group.members.map((m) => [m.name, m.matric, m.department, m.linkedin || "—"]);
+  s.addTable([[head("Name"), head("Matric number"), head("Department"), head("LinkedIn")], ...rows], {
+    x: 0.5, y: 1.2, w: 9, colW: [2.9, 1.7, 2.9, 1.5], fontFace: "Calibri", fontSize: 12, color: HEX.dk1, border: { type: "solid", pt: 0.75, color: "C9D3CD" }, rowH: 0.42, valign: "middle",
+  });
+  text(s, [
+    { text: "Source code, guide and full history: ", options: { bold: true } },
+    { text: group.repoUrl, options: { hyperlink: { url: group.repoUrl }, color: HEX.accent3 } },
+  ], { x: 0.5, y: 4.0, w: 9, h: 0.4, fontSize: 14 });
+  s.addNotes("This is our team, and the link to the repository, which has the full source code, the installation and deployment guide, the tests, and the history of every change and fix.");
 }
 
 // ---------- 19. References ----------
